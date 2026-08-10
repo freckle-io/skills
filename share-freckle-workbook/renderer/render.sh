@@ -12,7 +12,8 @@ CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 W=$(python3 -c "import json;print(json.load(open('$SPEC'))['canvas']['w'])")
 
-PORT=8471
+# unique port per run — concurrent sessions must never serve each other's card
+PORT=$(python3 -c "import socket; s=socket.socket(); s.bind(('127.0.0.1',0)); print(s.getsockname()[1]); s.close()")
 (cd "$DIR" && python3 -m http.server $PORT >/dev/null 2>&1) &
 SERVER_PID=$!
 trap "kill $SERVER_PID 2>/dev/null || true" EXIT

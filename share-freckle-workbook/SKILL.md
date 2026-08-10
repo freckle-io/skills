@@ -1,6 +1,6 @@
 ---
 name: share-freckle-workbook
-description: Turn any Freckle workflow into a single shareable LinkedIn image — a stylized, consolidated DAG on a product-canvas card with outcome stats and poster attribution. Use when someone wants to share a workflow, make a workflow image/card, or show off what they built in Freckle. Invoke with /share-freckle-workbook [workbook or workflow name/id].
+description: Turn any Freckle workflow into a single shareable LinkedIn image — a stylized, consolidated DAG on a product-canvas card with outcome stats and poster attribution. Use when someone wants to share a workflow, make a workflow image/card, or show off what they built in Freckle. Invoke with /share-freckle-workbook <Freckle workbook or workflow URL>.
 ---
 
 # share-freckle-workbook
@@ -18,9 +18,11 @@ composition; your editorial freedom is the *content* of the spec.
 
 ## Pipeline
 
-1. **Resolve the workflow.** `freckle workflow saved list [--org-id ORG]`
-   (add `--all` to search across orgs) and fuzzy-match what the user asked for.
-   If they named a workbook, pick its most story-rich workflow.
+1. **Resolve the workflow.** The user pastes a Freckle URL — extract the
+   org id (`org_...`) and the workbook/workflow UUID from it, and pass
+   `--org-id` to every CLI call. If they gave a name instead, fall back to
+   fuzzy-matching `freckle workflow saved list [--all]`. Given a workbook,
+   pick its most story-rich workflow.
 
 2. **Pull the truth.**
    - Topology: `freckle workflow saved get-draft [--org-id ORG] <id> | python3 scripts/parse-draft.py`
@@ -42,10 +44,12 @@ composition; your editorial freedom is the *content* of the spec.
    marketing words (effortless/seamless/unlock/supercharge/AI-powered). No CTA,
    no URLs, no comment-bait — this is a share asset, not a lead magnet.
 
-6. **Identity.** Read `config.json` → `identity`. If empty, ask once for
-   name, role, and company, then save it there. No headshots, ever.
-   (`logoDevToken` in the same file powers brand-logo fetch; leave brands
-   name-only if unset.)
+6. **Identity + brand.** Read `config.json`. If `identity` is empty, ask
+   once for name, role, and company. If `brand` is empty, ask for the
+   agency/company name and its domain (or a logo file path) — fetch the logo
+   via logo.dev using `logoDevToken` when both are set, else render the brand
+   name-only. Save everything back to `config.json` so it's never asked again.
+   No headshots, ever.
 
 7. **Build the spec** per [references/card-spec.md](references/card-spec.md)
    and render:

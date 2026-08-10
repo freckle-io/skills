@@ -1,5 +1,3 @@
-# licensed font — copy P22Mackinac-Bold.otf from the freckle-cli-design-system repo
-renderer/assets/fonts/P22Mackinac-Bold.otf
 # fetched brand logos (customer assets, generated at runtime)
 renderer/assets/brands/
 # local render outputs

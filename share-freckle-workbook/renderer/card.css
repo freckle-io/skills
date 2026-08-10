@@ -9,7 +9,6 @@
 @font-face { font-family: 'Geist Mono'; src: url('assets/fonts/GeistMono-Regular.woff2') format('woff2'); font-weight: 400; }
 @font-face { font-family: 'Geist Mono'; src: url('assets/fonts/GeistMono-Medium.woff2') format('woff2'); font-weight: 500; }
 @font-face { font-family: 'Geist Mono'; src: url('assets/fonts/GeistMono-SemiBold.woff2') format('woff2'); font-weight: 600; }
-@font-face { font-family: 'P22 Mackinac Pro'; src: url('assets/fonts/P22Mackinac-Bold.otf') format('opentype'); font-weight: 700; }
 
 :root {
   /* new branding, verified against freckle.io (Aug 2026): indigo accent,
@@ -71,10 +70,10 @@ body { font-family: 'Geist', sans-serif; color: var(--ink); background: var(--pa
 .brand .bname { font-size: 30px; font-weight: 600; letter-spacing: -0.01em; }
 
 .wordmark {
-  font-family: 'P22 Mackinac Pro', serif;
-  font-weight: 700;
+  font-family: 'Geist', sans-serif;
+  font-weight: 600;
   font-size: 30px;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 .wordmark.small { font-size: 24px; color: var(--gray-7); }
 .wordmark .underscore { color: var(--accent-4); }

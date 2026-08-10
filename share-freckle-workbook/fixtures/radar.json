@@ -4,7 +4,8 @@
     "h": 1500
   },
   "brand": {
-    "name": "Harborlight"
+    "name": "Your Agency",
+    "logo": "placeholder-logo.svg"
   },
   "headline": "The competitive audience radar",
   "subline": "Every engager on competitor posts, enriched, scored against the ICP, and routed to the team in Slack.",

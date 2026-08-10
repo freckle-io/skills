@@ -15,23 +15,21 @@ cp -R share-freckle-workbook ~/.claude/skills/share-freckle-workbook   # Claude 
 cp -R share-freckle-workbook ~/.codex/skills/share-freckle-workbook    # Codex
 ```
 
-Then invoke with `/share-freckle-workbook [workbook or workflow name]`.
+Then invoke with `/share-freckle-workbook <Freckle workbook or workflow URL>`.
 
 ## Requirements
 
 - The [Freckle CLI](https://install.freckle.dev), authenticated (`freckle auth`)
 - Google Chrome (headless rendering)
 - Node.js 20+ and Python 3
-- **P22 Mackinac Pro Bold** (`P22Mackinac-Bold.otf`) — licensed, not included.
-  Freckle team: copy it from the design-system repo into
-  `renderer/assets/fonts/`. Without it the wordmark falls back to a system serif.
 
 ## First run
 
-The skill asks once for your name, role, and company (stored in `config.json`)
-and puts them in the card footer. Optionally add a free
-[logo.dev](https://logo.dev) publishable key as `logoDevToken` to render your
-company logo in the header.
+The skill asks once for your name, role, and company (footer attribution) and
+your agency's name + domain (header brand), all stored in `config.json`. Add a
+free [logo.dev](https://logo.dev) publishable key as `logoDevToken` and it
+fetches your logo automatically; otherwise the header shows your brand
+name-only.
 
 ## How it works
 

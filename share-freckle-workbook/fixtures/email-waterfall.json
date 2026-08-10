@@ -1,0 +1,75 @@
+{
+  "canvas": {
+    "w": 1200,
+    "h": 1500
+  },
+  "name": "Find work email waterfall",
+  "headline": "Find any work email: Findymail first, LeadMagic fallback, ZeroBounce to verify.",
+  "sources": [
+    {
+      "label": "full name"
+    },
+    {
+      "label": "company domain"
+    },
+    {
+      "label": "any list",
+      "dashed": true
+    }
+  ],
+  "dag": {
+    "nodes": [
+      {
+        "id": "input",
+        "title": "Person + company",
+        "sub": "name and domain in",
+        "marks": [],
+        "kind": "input"
+      },
+      {
+        "id": "find",
+        "title": "Find + verify email",
+        "sub": "Findymail \u2192 LeadMagic \u2192 ZeroBounce",
+        "marks": [
+          "Findymail",
+          "LeadMagic"
+        ],
+        "kind": "enrich"
+      },
+      {
+        "id": "output",
+        "title": "Verified work email",
+        "sub": "deliverable, not guessed",
+        "marks": [
+          "Freckle"
+        ],
+        "kind": "output"
+      }
+    ],
+    "edges": [
+      {
+        "from": "input",
+        "to": "find"
+      },
+      {
+        "from": "find",
+        "to": "output",
+        "label": "first hit wins"
+      }
+    ],
+    "cols": {}
+  },
+  "runbar": {
+    "live": false,
+    "segments": [
+      "pay only when a verified email is found",
+      "from the Freckle workflow library"
+    ]
+  },
+  "footer": {
+    "name": "Andy Toizer",
+    "role": "Head of Growth",
+    "company": "Freckle"
+  },
+  "series": "Built with Freckle CLI"
+}

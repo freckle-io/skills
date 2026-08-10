@@ -1,0 +1,163 @@
+{
+  "canvas": {
+    "w": 1200,
+    "h": 1500
+  },
+  "brand": {
+    "name": "Harborlight"
+  },
+  "headline": "The competitive audience radar",
+  "subline": "Every engager on competitor posts, enriched, scored against the ICP, and routed to the team in Slack.",
+  "sources": [
+    {
+      "label": "Competitor posts",
+      "mark": "LinkedIn"
+    },
+    {
+      "label": "Lookalike audiences",
+      "mark": "LinkedIn"
+    },
+    {
+      "label": "any engager",
+      "dashed": true
+    }
+  ],
+  "dag": {
+    "nodes": [
+      {
+        "id": "input",
+        "title": "New LinkedIn engager",
+        "sub": "from a tracked post",
+        "marks": [
+          "LinkedIn"
+        ],
+        "kind": "input",
+        "stat": {
+          "value": "293",
+          "label": "engagers in"
+        }
+      },
+      {
+        "id": "profile",
+        "title": "Enrich profile",
+        "sub": "3-step waterfall",
+        "marks": [
+          "AIArk",
+          "LeadMagic",
+          "Freckle"
+        ],
+        "kind": "enrich"
+      },
+      {
+        "id": "company",
+        "title": "Enrich company",
+        "sub": "Apollo + research agent",
+        "marks": [
+          "Apollo",
+          "Freckle"
+        ],
+        "kind": "enrich"
+      },
+      {
+        "id": "score",
+        "title": "Score ICP fit",
+        "sub": "AI-tiered A through D",
+        "marks": [
+          "Freckle"
+        ],
+        "kind": "score",
+        "stat": {
+          "value": "13",
+          "label": "made Tier A/B"
+        }
+      },
+      {
+        "id": "contact",
+        "title": "Find contact info",
+        "sub": "email + mobile, verified",
+        "marks": [
+          "Findymail",
+          "LeadMagic"
+        ],
+        "kind": "enrich",
+        "stat": {
+          "value": "12/13",
+          "label": "emails verified"
+        }
+      },
+      {
+        "id": "dataset",
+        "title": "Audience review",
+        "sub": "every row, scored",
+        "marks": [
+          "Freckle"
+        ],
+        "kind": "output"
+      },
+      {
+        "id": "slack",
+        "title": "Slack alert",
+        "sub": "pings the team live",
+        "marks": [
+          "Slack"
+        ],
+        "kind": "output",
+        "stat": {
+          "value": "4",
+          "label": "Tier A alerts"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "input",
+        "to": "profile"
+      },
+      {
+        "from": "profile",
+        "to": "company"
+      },
+      {
+        "from": "company",
+        "to": "score"
+      },
+      {
+        "from": "score",
+        "to": "contact"
+      },
+      {
+        "from": "score",
+        "to": "dataset"
+      },
+      {
+        "from": "contact",
+        "to": "dataset"
+      },
+      {
+        "from": "dataset",
+        "to": "slack"
+      }
+    ],
+    "cols": {
+      "input": 0,
+      "profile": 0,
+      "company": 0,
+      "score": 0,
+      "contact": 1,
+      "dataset": 0,
+      "slack": 0
+    }
+  },
+  "runbar": {
+    "live": true,
+    "segments": [
+      "runs on every new engager"
+    ]
+  },
+  "footer": {
+    "name": "Andy Toizer",
+    "role": "Head of Growth",
+    "company": "Freckle"
+  },
+  "series": "Built with Freckle CLI"
+}

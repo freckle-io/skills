@@ -1,0 +1,303 @@
+/* Freckle workflow card — LinkedIn share asset.
+   The card IS the product canvas: dot-grid surface edge to edge, the workflow
+   DAG as the hero object, product chrome (name pill, source pills, run bar)
+   carrying title and stats. Design system supplies colors, type, and vibe only. */
+
+@font-face { font-family: 'Geist'; src: url('assets/fonts/Geist-Regular.woff2') format('woff2'); font-weight: 400; }
+@font-face { font-family: 'Geist'; src: url('assets/fonts/Geist-Medium.woff2') format('woff2'); font-weight: 500; }
+@font-face { font-family: 'Geist'; src: url('assets/fonts/Geist-SemiBold.woff2') format('woff2'); font-weight: 600; }
+@font-face { font-family: 'Geist Mono'; src: url('assets/fonts/GeistMono-Regular.woff2') format('woff2'); font-weight: 400; }
+@font-face { font-family: 'Geist Mono'; src: url('assets/fonts/GeistMono-Medium.woff2') format('woff2'); font-weight: 500; }
+@font-face { font-family: 'Geist Mono'; src: url('assets/fonts/GeistMono-SemiBold.woff2') format('woff2'); font-weight: 600; }
+@font-face { font-family: 'P22 Mackinac Pro'; src: url('assets/fonts/P22Mackinac-Bold.otf') format('opentype'); font-weight: 700; }
+
+:root {
+  /* new branding, verified against freckle.io (Aug 2026): indigo accent,
+     stone-950 ink, Tailwind-standard tint pills */
+  --ink: #0C0A09;
+  --gray-1: #F4F5F5; --gray-2: #ECEDED; --gray-3: #DEDFDF; --gray-4: #BBBCBC;
+  --gray-5: #9C9D9D; --gray-6: #737474; --gray-7: #5F6060;
+  --accent-0: #E0E7FF;   /* indigo-100 — pill backgrounds */
+  --accent-1: #C7D2FE;   /* indigo-200 — hero-node border */
+  --accent-4: #6366F1;   /* indigo-500 — chevron, underscore */
+  --accent-7: #4338CA;   /* indigo-700 — text on tint, stat values */
+  --blue-0: #DBEAFE; --blue-7: #1D4ED8;
+  --green-0: #DCFCE7; --green-6: #059669; --green-9: #15803D;
+  --page: #FDFDFC;
+  --card-border: #E7E5E4;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { width: 1200px; }
+body { font-family: 'Geist', sans-serif; color: var(--ink); background: var(--page); }
+
+.page {
+  position: relative;
+  width: 1200px;
+  background:
+    radial-gradient(circle 1px at 1px 1px, rgba(31,32,32,.09) 1px, transparent 1.5px) 0 0 / 26px 26px,
+    var(--page);
+  border: 1px solid rgba(31,32,32,.10);
+  display: flex;
+  flex-direction: column;
+  padding: 52px 64px 0;
+  overflow: hidden;
+}
+
+/* the authored gradient survives in two small places: a slim strip along the
+   top edge (the site's announcement-bar echo) and the hero node's ring */
+.topstrip {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 10px;
+  background-size: 100% auto;
+  background-position: center 38%;
+}
+
+/* ---------- top: brand row ---------- */
+
+.brandrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand { display: flex; align-items: center; gap: 16px; }
+.brand img {
+  width: 56px; height: 56px;
+  border-radius: 13px;
+  border: 1px solid rgba(31,32,32,.08);
+}
+.brand .bname { font-size: 30px; font-weight: 600; letter-spacing: -0.01em; }
+
+.wordmark {
+  font-family: 'P22 Mackinac Pro', serif;
+  font-weight: 700;
+  font-size: 30px;
+  letter-spacing: -0.01em;
+}
+.wordmark.small { font-size: 24px; color: var(--gray-7); }
+.wordmark .underscore { color: var(--accent-4); }
+
+/* ---------- series eyebrow ---------- */
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 22px;
+}
+.eyebrow .line { height: 1px; width: 130px; background: rgba(31,32,32,.14); }
+.eyebrow .etext {
+  font-family: 'Geist Mono', monospace;
+  font-weight: 500;
+  font-size: 21px;
+  letter-spacing: 0.18em;
+  color: var(--gray-6);
+  white-space: nowrap;
+}
+.eyebrow .chev { color: var(--accent-4); margin-right: 14px; }
+
+/* ---------- title block ---------- */
+
+.name-pill {
+  display: inline-flex;
+  align-self: flex-start;
+  margin-top: 44px;
+  background: var(--accent-0);
+  color: var(--accent-7);
+  font-weight: 600;
+  font-size: 19px;
+  border-radius: 9px;
+  padding: 8px 16px;
+}
+
+.headline {
+  margin-top: 10px;
+  font-weight: 500;
+  font-size: 58px;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  max-width: 1040px;
+  text-align: center;
+  align-self: center;
+}
+
+.subline {
+  margin-top: 16px;
+  font-size: 26px;
+  line-height: 1.45;
+  color: var(--gray-7);
+  max-width: 1000px;
+  text-align: center;
+  align-self: center;
+}
+
+/* ---------- stage: sources + DAG on the open canvas ---------- */
+
+.stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;  /* slack from the square clamp splits around the DAG */
+  margin-top: 22px;
+}
+
+.sources-wrap { display: flex; flex-direction: column; align-items: center; }
+.sources { display: flex; gap: 14px; }
+.source {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Geist Mono', monospace;
+  font-weight: 500;
+  font-size: 19.5px;
+  color: var(--gray-7);
+  background: #fff;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 9px 18px;
+  box-shadow: 0 2px 2px rgba(0,0,0,.03);
+}
+.source.dashed { border-style: dashed; background: transparent; box-shadow: none; color: var(--gray-6); }
+.source img { width: 22px; height: 22px; }
+.source .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+.drop-line {
+  width: 1px; height: 30px;
+  background: var(--gray-3);
+  position: relative;
+}
+.drop-line::after {
+  content: '';
+  position: absolute; left: 50%; bottom: -3px;
+  transform: translateX(-50%);
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--gray-4);
+}
+
+.dag { position: relative; }
+
+.node {
+  position: absolute;
+  background: #fff;
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(16,12,40,.05), 0 6px 18px rgba(16,12,40,.05);
+  padding: 12px 22px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.node.score {
+  border: none;
+  box-shadow: 0 2px 14px rgba(99,102,241,.20);
+}
+.node.score::before {
+  /* authored-gradient ring: the grain PNG showing through a 2px border zone */
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 18px;
+  background-image: var(--score-ring);
+  background-size: 100% 100%;
+  z-index: -1;
+}
+
+.node .markstack { display: flex; flex-shrink: 0; }
+.node .markframe {
+  position: relative;
+  width: 52px; height: 52px;
+  border-radius: 13px;
+  background: #fff;
+  border: 1px solid var(--gray-2);
+  display: flex; align-items: center; justify-content: center;
+}
+.node .markframe img { width: 33px; height: 33px; }
+.node .markstack .markframe + .markframe { margin-left: -15px; }
+.node .markstack .markframe:nth-child(1) { z-index: 3; }
+.node .markstack .markframe:nth-child(2) { z-index: 2; }
+.node .markstack .markframe:nth-child(3) { z-index: 1; }
+
+.node .text { flex: 1; min-width: 0; }
+.node .title { font-weight: 600; font-size: 27px; line-height: 1.2; white-space: nowrap; }
+.node .sub { font-size: 19.5px; color: var(--gray-6); margin-top: 3px; white-space: nowrap; }
+
+.node .kindpill {
+  font-family: 'Geist Mono', monospace;
+  font-size: 14.5px; font-weight: 500;
+  letter-spacing: 0.06em;
+  border-radius: 6px;
+  padding: 4px 9px;
+}
+.node .kindpill.input { background: var(--blue-0); color: var(--blue-7); }
+.node .kindpill.output { background: var(--green-0); color: var(--green-9); }
+
+.edge-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: var(--accent-0);
+  color: var(--accent-7);
+  font-family: 'Geist Mono', monospace;
+  font-weight: 600;
+  font-size: 20px;
+  border-radius: 9px;
+  padding: 8px 16px;
+  white-space: nowrap;
+  box-shadow: 0 0 0 4px var(--page);
+}
+
+/* ---------- per-node stat (right-aligned number, like the product's score column) ---------- */
+
+.nstat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  flex-shrink: 0;
+}
+.nstat .value {
+  font-family: 'Geist Mono', monospace;
+  font-weight: 600;
+  font-size: 35px;
+  letter-spacing: -0.01em;
+  color: var(--accent-7);
+}
+.nstat .label { font-size: 17px; color: var(--gray-6); white-space: nowrap; }
+
+/* ---------- run bar ---------- */
+
+.runbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 18px 0 0;
+  font-family: 'Geist Mono', monospace;
+  font-size: 21px;
+  color: var(--gray-6);
+}
+.runbar .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--green-6); }
+.runbar .strong { color: var(--ink); font-weight: 500; }
+
+/* ---------- footer ---------- */
+
+.footer {
+  margin: 24px -64px 0;
+  padding: 22px 64px 26px;
+  border-top: 1px solid rgba(31,32,32,.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.55);
+}
+.footer .who { font-size: 22px; }
+.footer .who .name { font-weight: 600; }
+.footer .who .meta { color: var(--gray-6); }
+.footer .made {
+  font-family: 'Geist Mono', monospace;
+  font-size: 16px;
+  color: var(--gray-5);
+}
+.footer .made .u { color: var(--accent-4); }

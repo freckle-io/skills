@@ -1,0 +1,4 @@
+interface:
+  display_name: "Clay to Freckle"
+  short_description: "Fast Clay table or Workbook migration with replay tests"
+  default_prompt: "Use $clay-to-freckle to migrate this Clay table or Workbook into Freckle with a three-row build, same-input replay testing, and optional historical data migration."

@@ -11,8 +11,7 @@ shell access.
 
 **Easiest:** click **Share** on any workflow page in app.freckle.io and paste
 the copied text into your coding agent. That's it — the agent bootstraps this
-skill if needed and builds your card. (The payload contract lives in
-[references/share-script.md](references/share-script.md).)
+skill if needed and builds your card.
 
 **Or install it as a native skill:**
 
@@ -49,5 +48,4 @@ is a deliberate look rather than a fallback.
 consolidate 30+ real nodes into 5–8 stylized ones → compute positivity-gated
 outcome stats → emit a spec JSON → deterministic HTML/Chrome render at 2x with
 a mandatory 540px feed test → deliver, refine once, done. Design rules live in
-`references/`, the renderer in `renderer/`, example specs in `fixtures/`, and
-the Share-button product spec in `docs/share-button-spec.md`.
+`references/`, the renderer in `renderer/`, and example specs in `fixtures/`.

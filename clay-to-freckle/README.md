@@ -24,7 +24,8 @@ Install the repository as a personal skill for your agent.
 ### Codex
 
 ```bash
-git clone git@github.com:freckle-io/clay-to-freckle.git ~/.codex/skills/clay-to-freckle
+git clone https://github.com/freckle-io/skills.git
+cp -R skills/clay-to-freckle ~/.codex/skills/
 ```
 
 Then paste a Clay table or Workbook URL into Codex:
@@ -37,7 +38,8 @@ https://app.clay.com/workspaces/.../workbooks/wb_...
 ### Claude Code
 
 ```bash
-git clone git@github.com:freckle-io/clay-to-freckle.git ~/.claude/skills/clay-to-freckle
+git clone https://github.com/freckle-io/skills.git
+cp -R skills/clay-to-freckle ~/.claude/skills/
 ```
 
 Then run:
@@ -87,10 +89,11 @@ You handle sign-in, 2FA, and any connection approvals. The skill never asks for 
 
 ## Updating
 
-Pull the latest version from inside the installed skill directory:
+Pull the latest monorepo version, then copy the skill over your installed version:
 
 ```bash
-git pull
+git -C skills pull
+cp -R skills/clay-to-freckle ~/.codex/skills/
 ```
 
 The skill's executable instructions live in [`SKILL.md`](SKILL.md). The files under [`specialists/`](specialists/) describe each migration stage, while [`references/`](references/) and [`scripts/`](scripts/) hold the supporting rules and deterministic tooling.

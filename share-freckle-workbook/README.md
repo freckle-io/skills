@@ -2,13 +2,19 @@
 
 Turn any Freckle workflow into a single shareable LinkedIn image — a stylized,
 consolidated DAG on a product-canvas card with outcome stats and poster
-attribution. Built for Claude Code and Codex.
+attribution. Works in Claude Code, Codex, Cursor, or any coding agent with
+shell access.
 
 ![example card](docs/example-card.png)
 
-## Install
+## Use it
 
-Copy this folder into your agent's skills directory:
+**Easiest:** click **Share** on any workflow page in app.freckle.io and paste
+the copied text into your coding agent. That's it — the agent bootstraps this
+skill if needed and builds your card. (The payload contract lives in
+[references/share-script.md](references/share-script.md).)
+
+**Or install it as a native skill:**
 
 ```bash
 cp -R share-freckle-workbook ~/.claude/skills/share-freckle-workbook   # Claude Code
@@ -23,18 +29,25 @@ Then invoke with `/share-freckle-workbook <Freckle workbook or workflow URL>`.
 - Google Chrome (headless rendering)
 - Node.js 20+ and Python 3
 
-## First run
+## How a run feels
 
-The skill asks once for your name, role, and company (footer attribution) and
-your agency's name + domain (header brand), all stored in `config.json`. Add a
-free [logo.dev](https://logo.dev) publishable key as `logoDevToken` and it
-fetches your logo automatically; otherwise the header shows your brand
-name-only.
+You get a finished card first, questions after — one short message covering
+only what's missing: a headline check, your logo (if your org doesn't have one
+in Freckle yet), and optionally your headshot + job title for the footer.
+Answers are saved to `~/.config/freckle/share-freckle-workbook/` on your
+machine, so the next share asks one question or none.
+
+Your logo comes from your Freckle org, or from a file you hand over — never
+from a logo lookup service, so a card can't end up wearing the wrong company's
+mark. If you supply one, the skill offers to add it to your Freckle org so
+it's there next time. Until then the header shows your org name as text, which
+is a deliberate look rather than a fallback.
 
 ## How it works
 
 `SKILL.md` is the pipeline: resolve the workflow via the Freckle CLI →
 consolidate 30+ real nodes into 5–8 stylized ones → compute positivity-gated
 outcome stats → emit a spec JSON → deterministic HTML/Chrome render at 2x with
-a mandatory 540px feed test. Design rules live in `references/`, the renderer
-in `renderer/`, example specs in `fixtures/`.
+a mandatory 540px feed test → deliver, refine once, done. Design rules live in
+`references/`, the renderer in `renderer/`, example specs in `fixtures/`, and
+the Share-button product spec in `docs/share-button-spec.md`.

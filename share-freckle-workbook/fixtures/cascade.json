@@ -1,0 +1,114 @@
+{
+  "canvas": {
+    "w": 1200,
+    "h": 1500
+  },
+  "brand": {
+    "name": "Your Agency",
+    "logo": "placeholder-logo.svg"
+  },
+  "series": "Built with Freckle CLI",
+  "headline": "Every open role, whatever ATS they use",
+  "subline": "One domain in. Checks the indexed jobs feed, researches the real ATS board when that's empty, then reads the careers site directly.",
+  "sources": [
+    {
+      "label": "Any company domain",
+      "dashed": true
+    },
+    {
+      "label": "Indexed jobs feed"
+    },
+    {
+      "label": "Official ATS boards"
+    }
+  ],
+  "dag": {
+    "nodes": [
+      {
+        "id": "domain",
+        "kind": "input",
+        "title": "A company domain",
+        "sub": "one domain per run",
+        "stat": {
+          "value": "10",
+          "label": "domains in"
+        }
+      },
+      {
+        "id": "feed",
+        "title": "Check the feed",
+        "sub": "indexed postings, via Apify"
+      },
+      {
+        "id": "find",
+        "kind": "score",
+        "title": "Find the ATS board",
+        "sub": "official sites only, verified",
+        "marks": [
+          "freckle"
+        ]
+      },
+      {
+        "id": "scrape",
+        "title": "Scrape that board",
+        "sub": "Ashby, Greenhouse, Lever, Workday"
+      },
+      {
+        "id": "read",
+        "title": "Read the careers site",
+        "sub": "research agent, last resort",
+        "marks": [
+          "freckle"
+        ]
+      },
+      {
+        "id": "jobs",
+        "kind": "output",
+        "title": "Current jobs",
+        "sub": "deduped, one row per role",
+        "marks": [
+          "freckle"
+        ],
+        "stat": {
+          "value": "353",
+          "label": "open roles"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "domain",
+        "to": "feed"
+      },
+      {
+        "from": "feed",
+        "to": "find",
+        "label": "when the feed is empty"
+      },
+      {
+        "from": "find",
+        "to": "scrape"
+      },
+      {
+        "from": "scrape",
+        "to": "read",
+        "label": "when the ATS isn't supported"
+      },
+      {
+        "from": "read",
+        "to": "jobs"
+      }
+    ]
+  },
+  "runbar": {
+    "segments": [
+      "runs on any domain you give it",
+      "every role with a direct apply link"
+    ]
+  },
+  "footer": {
+    "name": "Andy Toizer",
+    "role": "Head of Growth",
+    "company": "Freckle"
+  }
+}

@@ -8,7 +8,8 @@ Everything the card shows is in this JSON; the renderer adds nothing.
   "canvas": { "w": 1200, "h": 1500 },   // h is the MAX; short cards auto-shrink toward 1200 square
   "brand": {                             // the OWNER's brand — promotes whoever built it, top-left
     "name": "LeanScale",
-    "logo": "brands/leanscale.png"       // fetch via logo.dev at generation time (see below); omit -> name only
+    "logo": "brands/leanscale.png"       // from the Freckle org or a user-supplied file ONLY (see below);
+                                         // omit -> name only, which is a fine look, not a downgrade
   },                                     // omit brand entirely -> freckle_ takes the top-left slot
   "series": "Built with Freckle CLI",   // FIXED series eyebrow — identical on every card, never
                                         // customized; it's the franchise marker that makes the
@@ -29,9 +30,14 @@ Everything the card shows is in this JSON; the renderer adds nothing.
       { "id": "input", "title": "New LinkedIn engager", "sub": "from a tracked post", "marks": ["LinkedIn"], "kind": "input" }
     ],
     "edges": [
-      // edges are usually UNLABELED — branch counts belong in the branching
-      // node's stat (see stats.md). A label is the fallback for a second
-      // simultaneous branch; it docks on the source's bottom-right edge.
+      // Most edges are UNLABELED — branch COUNTS belong in the branching
+      // node's stat (see stats.md), never on the edge.
+      // The exception worth using: a CONDITION on a spine edge in a cascade
+      // ("when the feed is empty"). The renderer widens that row gap so the
+      // pill floats clear with arrow visible above and below — it is a
+      // first-class look, not a fallback.
+      // A label on a side-channel or rank-skipping edge docks on the source's
+      // bottom-right corner instead, since its midpoint would land on a node.
       { "from": "score", "to": "contact" }
     ],
     "cols": { "contact": 1 }             // spine = 0 (default); one side channel max (1 or -1)
@@ -47,20 +53,35 @@ Everything the card shows is in this JSON; the renderer adds nothing.
     "segments": ["runs on every new engager"]
     // status line under the DAG — qualitative claims; stats belong in the tiles
   },
-  "footer": { "name": "Andy Toizer", "role": "Head of Growth", "company": "Freckle" }
+  "footer": {
+    "name": "Andy Toizer",
+    "role": "Head of Growth",              // optional — omit/empty renders "Name · Company"
+    "company": "Freckle",
+    "avatar": "user/headshot.png"          // optional, path under renderer/assets/;
+                                           // renders a 48px circle left of the text.
+                                           // Opt-in only — omit unless the user said yes.
+  }
 }
 ```
 
-## Brand logo fetch (generation time)
+## Brand logo (generation time)
 
-```bash
-curl -sL -o renderer/assets/brands/<slug>.png \
-  "https://img.logo.dev/<their-domain>?token=<logoDevToken from config.json>&size=128&format=png&retina=true"
-```
-Check the result is a real PNG (`file`), and look at it — a gray placeholder
-glyph means no logo exists; fall back to name-only brand. The token lives in
-`config.json` (`logoDevToken`) — logo.dev publishable keys are free; without
-one, use name-only brands.
+The logo has exactly two legitimate sources, in this order:
+
+1. **The Freckle org** — `org_logo_url` from the Share script:
+   ```bash
+   curl -sL -o renderer/assets/brands/<org>.png "<org_logo_url>"
+   ```
+2. **A file the user hands you** in the follow-up round, kept at
+   `~/.config/freckle/share-freckle-workbook/logos/<org_id>.<ext>`.
+
+Verify either one is a real image (`file`) and look at it before shipping.
+No third source exists: **never fetch a logo by domain, from a logo service,
+or from anywhere else on the web, and never guess a domain from an org name.**
+A wrong mark on a card someone posts under their own name is far worse than
+no mark at all — and the name-only brand is a good-looking fallback, not a
+degraded one. When Freckle has no logo, render the name and let step 10 offer
+to put the user's file into their org.
 
 ## Rendering facts the editorial pass should know
 

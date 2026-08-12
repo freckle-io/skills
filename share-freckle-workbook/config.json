@@ -4,10 +4,6 @@
     "role": "",
     "company": ""
   },
-  "brand": {
-    "name": "",
-    "domain": "",
-    "logo": ""
-  },
-  "logoDevToken": ""
+  "headshot": "",
+  "orgs": {}
 }

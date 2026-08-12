@@ -16,7 +16,21 @@ Stats live inside the card's existing anatomy, never in a separate band:
    with the green LIVE dot when a connection is active.
 
 Get raw numbers with `scripts/dataset-stats.py <workbook-id> <dataset-id>
---org-id <org>` against the dataset the workflow writes to.
+--org-id <org>`. Run it against **every dataset in the workbook** — a workflow
+whose visible output is an external system (HubSpot, Slack, a CRM) still logs
+per-row results to a dataset, and that result dataset is the richest source of
+stats in the whole pipeline. Real fields are normally nested one level under a
+`result`/`properties` wrapper; the script flattens that for you, so treat a
+report showing only 100%-filled wrapper keys as a bug, not as an empty workflow.
+
+## The net-new rule (the strongest stat an enrichment workflow has)
+
+When a field has a `*_source` companion (`phone` + `phone_source`,
+`linkedin_url` + `linkedin_source`), the rows whose source is *not* the system
+of record are **net-new** — data the workflow found that the CRM didn't have.
+That is the workflow's actual value, and it beats raw fill every time:
+"239 phones HubSpot didn't have" lands where "346 phones (28%)" reads as a
+failure. Same data, honest either way, but only one is worth posting.
 
 ## The conditional-coverage rule (the one that matters)
 

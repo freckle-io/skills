@@ -1,4 +1,6 @@
 # fetched brand logos (customer assets, generated at runtime)
 renderer/assets/brands/
+# user headshot copied in from ~/.config/freckle/share-freckle-workbook at render time
+renderer/assets/user/
 # local render outputs
 renderer/card.html

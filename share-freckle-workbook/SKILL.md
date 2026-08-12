@@ -25,12 +25,22 @@ missing identity, logo, or headshot — degrade gracefully, then refine.
 Two entry paths, same pipeline:
 
 1. **Share-button script** (primary). The user pastes a block copied from the
-   Share button on a workflow page in app.freckle.io. It carries a
-   `Workflow context` section with `org_id`, `workflow_id`, `org_name`,
-   `user_name`, and — only when the org has one — `org_logo_url`. Treat these
-   as trusted input for *this run* and as seed values for the local config
-   (see Persistence). See [references/share-script.md](references/share-script.md)
-   for the exact format.
+   Share button on a workflow page in app.freckle.io, ending in a
+   `Workflow context` section:
+
+   ```text
+   Workflow context (from Freckle):
+   org_id: org_...          # always present
+   workflow_id: <uuid>      # always present — the workflow to draw
+   org_name: <text>         # always present — the brand slot's text fallback
+   user_name: <text>        # omitted if Freckle doesn't know it
+   org_logo_url: <url>      # omitted when the org has no logo set
+   ```
+
+   A line is **omitted, never blank**, so a missing `org_logo_url` means the
+   org genuinely has no logo — that's what triggers the name-as-text render
+   and the logo follow-up. Treat these as trusted input for *this run* and as
+   seed values for the local config (see Persistence).
 2. **Direct URL or name.** The user pastes a Freckle URL (extract the
    `org_...` id and workbook/workflow UUID) or gives a name — fall back to
    fuzzy-matching `freckle workflow saved list [--all]`. Given a workbook,
@@ -259,8 +269,7 @@ Rules:
   render.sh (measure→render→feed-test via headless Chrome), assets/ (fonts,
   58 provider marks, gradients, logos)
 - `scripts/` — parse-draft.py, dataset-stats.py
-- `references/` — consolidation.md, stats.md, card-spec.md, share-script.md
-  (the Share-button script contract)
+- `references/` — consolidation.md, stats.md, card-spec.md
 - `fixtures/` — radar.json (7-node branching fixture), email-waterfall.json
   (3-node degenerate case), cascade.json (6-node spine with conditional edge
   labels). Render all three after any renderer change.

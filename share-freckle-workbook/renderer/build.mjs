@@ -23,6 +23,10 @@ const H = measuring ? MAX_H : Math.max(MIN_H, Math.min(MAX_H, Number(fixedH) || 
 const NODE_W = 560;
 const NODE_H = 92;
 const RANK_GAP = 48;
+// A spine label is a ~48px pill centred in the gap — at RANK_GAP it fills the
+// space edge to edge, touching both nodes and hiding the arrow it annotates.
+// Gaps that carry one open up; every other gap stays tight.
+const LABELED_RANK_GAP = 108;
 const COL_GAP = 46;
 const PAGE_PAD = 64;
 
@@ -44,16 +48,26 @@ const maxRank = Math.max(...Object.values(rank));
 
 // spine (col 0) sits on the canvas midline; side columns bulge out as
 // channels, clamped so nothing leaves the page padding
+// per-gap heights: only the gaps holding a spine label are widened
+const labelOnSpine = e =>
+  e.label && colOf(e.from) === colOf(e.to) && rank[e.to] === rank[e.from] + 1;
+const gapAfter = Array.from({ length: Math.max(maxRank, 1) }, () => RANK_GAP);
+for (const e of D.edges) {
+  if (labelOnSpine(e)) gapAfter[rank[e.from]] = LABELED_RANK_GAP;
+}
+const yOfRank = [0];
+for (let r = 1; r <= maxRank; r++) yOfRank[r] = yOfRank[r - 1] + NODE_H + gapAfter[r - 1];
+
 const innerW = spec.canvas.w - PAGE_PAD * 2;
 const SIDE = Math.min(0.72 * (NODE_W + COL_GAP), innerW / 2 - NODE_W / 2);
 const dagW = innerW;
-const dagH = (maxRank + 1) * NODE_H + maxRank * RANK_GAP;
+const dagH = yOfRank[maxRank] + NODE_H;
 
 const pos = {};
 for (const n of D.nodes) {
   pos[n.id] = {
     x: innerW / 2 + colOf(n.id) * SIDE - NODE_W / 2,
-    y: rank[n.id] * (NODE_H + RANK_GAP),
+    y: yOfRank[rank[n.id]],
   };
 }
 
@@ -87,7 +101,6 @@ for (const e of D.edges) {
   const sy = s.y + NODE_H;
   const tx = t.x + NODE_W / 2 + slotOffset(insOf[e.to], e, ed => pos[ed.from].x);
   const ty = t.y;
-  const crossCol = colOf(e.from) !== colOf(e.to);
   let d;
   if (Math.abs(sx - tx) < 26) {
     // near-vertical: snap straight — an S-hook must never render
@@ -109,11 +122,13 @@ for (const e of D.edges) {
   }
   paths.push(`<path d="${d}" fill="none" stroke="#BBBCBC" stroke-width="1.75" marker-end="url(#arrow)"/>`);
   if (e.label) {
-    if (crossCol) {
-      // dock on the source node's bottom-right edge, straddling the border
-      labels.push({ x: s.x + NODE_W - 16, y: sy, text: e.label, dock: true });
-    } else {
+    if (labelOnSpine(e)) {
+      // centred in a gap that was widened for it, so arrow shows above + below
       labels.push({ x: sx, y: (sy + ty) / 2, text: e.label });
+    } else {
+      // anything else (side channels, multi-rank skips) would land the pill on
+      // top of a node at its midpoint — dock it on the source's bottom-right
+      labels.push({ x: s.x + NODE_W - 16, y: sy, text: e.label, dock: true });
     }
   }
 }
@@ -165,6 +180,11 @@ const runbarHtml = (rb.segments && rb.segments.length)
   ? `<div class="runbar">${rb.live ? '<span class="dot"></span>' : ''}${rbSegments}</div>`
   : '';
 
+// footer meta degrades: role unknown at v1 renders "Name · Company", never "· @ Co"
+const footerMeta = spec.footer.role && spec.footer.company
+  ? `${esc(spec.footer.role)} @ ${esc(spec.footer.company)}`
+  : esc(spec.footer.role || spec.footer.company || '');
+
 const html = `<!doctype html>
 <html><head><meta charset="utf-8">
 <link rel="stylesheet" href="card.css">
@@ -205,7 +225,8 @@ ${measuring ? '<script>addEventListener("load",()=>{document.title=String(docume
   </div>
 
   <div class="footer">
-    <span class="who"><span class="name">${esc(spec.footer.name)}</span><span class="meta"> · ${esc(spec.footer.role)} @ ${esc(spec.footer.company)}</span></span>
+    ${spec.footer.avatar ? `<img class="avatar" src="assets/${esc(spec.footer.avatar)}" alt="">` : ''}
+    <span class="who"><span class="name">${esc(spec.footer.name)}</span>${footerMeta ? `<span class="meta"> · ${footerMeta}</span>` : ''}</span>
   </div>
 
 </div>

@@ -291,6 +291,14 @@ body { font-family: 'Geist', sans-serif; color: var(--ink); background: var(--pa
   justify-content: center;
   background: rgba(255,255,255,.55);
 }
+.footer .avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 16px;
+  border: 1px solid rgba(31,32,32,.10);
+}
 .footer .who { font-size: 22px; }
 .footer .who .name { font-weight: 600; }
 .footer .who .meta { color: var(--gray-6); }

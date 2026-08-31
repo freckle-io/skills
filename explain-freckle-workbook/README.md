@@ -1,4 +1,4 @@
-# Explain Freckle System
+# Explain Freckle Workbook
 
 Inspect an existing Freckle Workbook, saved Workflow, or multi-workflow system through the authenticated Freckle CLI, then explain how its Datasets, connections, sources, integrations, branches, fallbacks, and activation state fit together.
 
@@ -8,7 +8,6 @@ The skill is evidence-first and read-only. It produces a guided system tour for 
 
 - A Freckle account with access to the system being explained
 - The [Freckle CLI](https://install.freckle.dev)
-- The `freckle` skill, invoked as `/freckle` in Claude Code or `$freckle` in Codex, with CLI authentication completed through that skill
 
 The public skill does not require database access, a VPN, or any internal Freckle tooling.
 
@@ -20,20 +19,20 @@ Clone the public skills repository and copy this folder into your agent's skill 
 
 ```bash
 git clone https://github.com/freckle-io/skills.git
-cp -R skills/explain-freckle-system ~/.codex/skills/
+cp -R skills/explain-freckle-workbook ~/.codex/skills/
 ```
 
 Then ask Codex:
 
 ```text
-Use $explain-freckle-system to inspect this Freckle Workbook and explain how everything fits together: <Workbook URL>
+Use $explain-freckle-workbook to inspect this Freckle Workbook and explain how everything fits together: <Workbook URL>
 ```
 
 ### Claude Code
 
 ```bash
 git clone https://github.com/freckle-io/skills.git
-cp -R skills/explain-freckle-system ~/.claude/skills/
+cp -R skills/explain-freckle-workbook ~/.claude/skills/
 ```
 
 Then invoke the skill with a Workbook URL, Workflow URL, or exact ID.

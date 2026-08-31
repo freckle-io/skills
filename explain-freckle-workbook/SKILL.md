@@ -1,9 +1,9 @@
 ---
-name: explain-freckle-system
+name: explain-freckle-workbook
 description: Inspect an existing Freckle Workbook, saved Workflow, or multi-workflow system through the authenticated Freckle CLI and explain its Datasets, connections, sources, integrations, execution paths, fallbacks, and operating state in clear GTM language. Use for walkthroughs, diagrams, architecture explanations, operating guides, system maps, current-state/future-state comparisons, or “how everything fits together” explanations. This public skill requires the freckle skill and never uses internal databases or APIs.
 ---
 
-# Explain Freckle System
+# Explain Freckle Workbook
 
 Orchestrate a read-only, evidence-first system explanation. Use the public `freckle` skill (`/freckle` in Claude Code or `$freckle` in Codex) as the only route to live Freckle inspection.
 

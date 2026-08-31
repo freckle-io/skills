@@ -13,15 +13,15 @@ Do not read the other specialists unless the orchestrator routes back after a fa
 ## Sequence
 
 1. Score the draft against every required quality dimension.
-2. Verify that every live current-state claim came from the read-only database, not the Freckle CLI or product APIs.
-3. Verify that each database query was tenant-scoped by the resolved `customer_id` and avoided forbidden secret-bearing or raw JSON fields.
+2. Verify that every live current-state claim came from the authenticated Freckle CLI through the `freckle` skill, not an internal database, direct API, browser request, or internal service.
+3. Verify that every live command was read-only and within the boundary in `cli-inspection.md`.
 4. Verify each current-state, automation, write, and fallback claim against the evidence ledger.
 5. Compare every Mermaid arrow with the path model.
 6. Confirm all important Datasets, Workflows, connections, and integrations are explained or intentionally omitted as immaterial.
 7. Confirm Dataset roles are not conflated.
 8. Confirm integration calls are not presented as row movement.
-9. Confirm intended/future behavior is labeled.
-10. Confirm no secret, raw payload, full draft, source config, connection mapping, projection JSON, or constant value appears.
+9. Confirm intended, future, documented, inferred, and unknown behavior is labeled.
+10. Confirm no token, credential ID, webhook endpoint, constant value, full mapping, raw entry, run input/output, full draft, node config, binding, URL, or private payload appears.
 11. Read once as a non-technical GTM operator:
    - Can they say where a row starts?
    - Can they say what makes it move?

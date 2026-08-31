@@ -1,16 +1,16 @@
 ---
 name: explain-freckle-system
-description: Inspect the live Freckle v2 system through the read-only Postgres database and explain real Workbooks, saved Workflows, Datasets, connections, sources, integrations, retries, fallbacks, writer boundaries, and activation state in clear GTM language. Use when a user asks for a walkthrough, diagram, architecture explanation, operating guide, system map, current-state/future-state comparison, or “how everything fits together” explanation of a Freckle workflow or multi-workflow system.
+description: Inspect an existing Freckle Workbook, saved Workflow, or multi-workflow system through the authenticated Freckle CLI and explain its Datasets, connections, sources, integrations, execution paths, fallbacks, and operating state in clear GTM language. Use for walkthroughs, diagrams, architecture explanations, operating guides, system maps, current-state/future-state comparisons, or “how everything fits together” explanations. This public skill requires the freckle skill and never uses internal databases or APIs.
 ---
 
 # Explain Freckle System
 
-Act as the orchestrator for a read-only, evidence-first system explanation. Keep the top-level context small and route through one specialist at a time.
+Orchestrate a read-only, evidence-first system explanation. Use the public `freckle` skill (`/freckle` in Claude Code or `$freckle` in Codex) as the only route to live Freckle inspection.
 
 ## First Move
 
 1. Create or resume `system-explanation-journal.md` using [references/system-explanation-journal.md](references/system-explanation-journal.md). Store it in a task-specific folder in the current workspace.
-2. Load the `db-query` skill and [references/database-inspection.md](references/database-inspection.md).
+2. Load the `freckle` skill and [references/cli-inspection.md](references/cli-inspection.md) before running any `freckle` command.
 3. Record the target, audience, available evidence, and runtime. Default the audience to a non-technical GTM operator.
 4. Route to [specialists/inspect.md](specialists/inspect.md).
 5. After inspection, route to [specialists/trace.md](specialists/trace.md).
@@ -35,30 +35,31 @@ If the task resumes after compaction, read the task journal first and follow its
 - Keep the active working set to this file, the journal, one specialist, and that specialist's references.
 - Each specialist must update the journal and finish with a compact `## Handoff`.
 - Specialists recommend a next lane; only the orchestrator selects it.
-- Use user-supplied artifacts when live inspection is unavailable, but label their date and authority.
+- Use user-supplied artifacts when CLI inspection is unavailable, but label their date and authority.
 - Answer in chat unless the user explicitly requests a saved document.
 - Treat [references/output-layout.md](references/output-layout.md) as the required final-answer shape. Do not compress the explanation into an executive summary when the inspected system has multiple material stages.
 
 ## Hard Rules
 
-- Stay read-only. Never create, edit, publish, run, trigger, archive, rotate, or mutate a Freckle object or external system.
-- Use the read-only Postgres database as the only live Freckle inspection surface. Never call the `freckle` CLI or Freckle product APIs for this skill, including list, inspect, source, connection, Workflow, and run commands.
-- Run only `SELECT` queries through the connection described by the `db-query` skill. If the database is unavailable, report the database/VPN blocker; do not fall back to the CLI.
+- Stay read-only. Never create, edit, publish, invoke, run, trigger, retry, archive, rotate, delete, or otherwise mutate a Freckle object or external system.
+- For live Freckle facts, use only authenticated `freckle` CLI inspection commands selected through the `freckle` skill. Never query an internal database, call Freckle HTTP APIs directly, or use internal services.
+- Resolve and pin the target organization according to the `freckle` skill before running org-scoped inspection commands.
 - Never run pending rows or invoke a saved Workflow merely to understand it.
-- Never print connection constant values, credentials, tokens, secrets, webhook URLs, or private integration payloads.
-- Never select or display credential-store rows, secret tables, raw source configs, full connection mappings, full Workflow drafts, raw webhook payload rows, or unfiltered JSON blobs.
-- Never infer automation from a Workflow definition alone. A connection or source determines whether rows run.
-- Never confuse a saved Workflow with a Workbook connection, or a connection receipt Dataset with durable business state.
-- Distinguish `inspected fact`, `documented intention`, and `inference`.
+- Never print tokens, credential IDs, connection constant values, webhook endpoint URLs, full input mappings, raw entry values, raw run inputs or outputs, full Workflow drafts, or private integration payloads.
+- An exported Workflow draft is a local inspection artifact. Extract only node families, graph structure, branch labels, and explicit Dataset destinations needed for the explanation; do not reproduce configuration or bindings.
+- Never infer automation from a Workflow definition alone. A Workbook connection and its trigger policy determine whether Dataset rows run automatically.
+- Never confuse a saved Workflow with a Workbook connection, or a connection output Dataset with durable business state.
+- Distinguish `CLI-inspected fact`, `documented intention`, and `inference`.
 - Distinguish `automatic now`, `manual now`, `disabled`, `undeployed`, and `future automatic`.
-- Every diagram arrow must resolve to inspected evidence or be explicitly labeled as future/intended.
+- Every diagram arrow must resolve to CLI-inspected evidence or be explicitly labeled as documented, future, or inferred.
 - Use business names first. Include IDs only when they help verification or disambiguation.
+- If the CLI does not expose a fact, label it unknown or use a dated user-supplied artifact. Do not reach for an internal inspection surface.
 - If artifacts conflict, explain the conflict; do not silently choose the cleaner story.
 
 ## References
 
 - [references/system-explanation-journal.md](references/system-explanation-journal.md): durable evidence and handoff template.
-- [references/database-inspection.md](references/database-inspection.md): mandatory read-only Postgres inspection sequence and safe query patterns.
+- [references/cli-inspection.md](references/cli-inspection.md): mandatory Freckle CLI inspection sequence and safe command boundary.
 - [references/freckle-object-model.md](references/freckle-object-model.md): object definitions, inspection rules, and topology traps.
 - [references/explanation-framework.md](references/explanation-framework.md): information hierarchy, visual patterns, and output contract.
 - [references/output-layout.md](references/output-layout.md): required final-answer structure and section template.
@@ -66,4 +67,4 @@ If the task resumes after compaction, read the task journal first and follow its
 
 ## Inspection Source
 
-Use the v2 tables documented in [references/database-inspection.md](references/database-inspection.md). Treat current rows from the read-only database as live authority, subject to the projection-table and ingestion-lag caveats recorded there.
+Treat current output from the authenticated Freckle CLI as live authority for facts it exposes. Record CLI visibility gaps instead of filling them with database access or unsupported assumptions.

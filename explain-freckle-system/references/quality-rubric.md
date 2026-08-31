@@ -8,11 +8,11 @@ All blocking checks must pass before delivery.
 |---|---|
 | Target | Exact Workbook/Workflow/system is identified, or the answer clearly states it is artifact-only |
 | Evidence | Current-state claims trace to the evidence ledger |
-| Inspection source | Every live Freckle fact comes from tenant-scoped `SELECT` queries against the read-only database; no Freckle CLI or product API was used |
+| Inspection source | Every live Freckle fact comes from authenticated CLI inspection through the `freckle` skill; no internal database, direct API, browser request, or internal service was used |
 | Object accuracy | Dataset, Workflow, connection, source, integration, worker, and writer are not conflated |
 | Path continuity | Every arrow has a mechanism and every branch rejoins or terminates |
 | Automation | Automatic, manual, disabled, undeployed, and future states are distinct |
-| Safety | No secret, constant value, credential payload, private endpoint, raw source config, full mapping, full Workflow draft, raw payload, or unfiltered JSON appears |
+| Safety | No token, credential ID, webhook endpoint, constant value, full mapping, raw entry, run input/output, full Workflow draft, node config, binding, private payload, or unfiltered CLI dump appears |
 | Diagram parity | Mermaid diagram matches the journal path model |
 | Layout | The answer follows `output-layout.md`: building blocks, connection rule, normal path, numbered walkthrough, Dataset map, fallback when material, integrations, and operating state |
 | Failure behavior | Retry/fallback trigger, coordinator, bound, rejoin, and exhaustion are explained when present |

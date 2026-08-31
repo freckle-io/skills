@@ -2,7 +2,7 @@
 
 Sections: task template, evidence inventory, path/state model, draft, validation, and handoff.
 
-Create this file in a task-specific folder in the current workspace. Keep it compact and current; do not store secrets or raw connection mappings.
+Create this file in a task-specific folder in the current workspace. Keep it compact and current; do not store tokens, credential IDs, webhook endpoints, constant values, raw entries, full mappings, or Workflow draft config.
 
 ```markdown
 # Freckle System Explanation Journal
@@ -24,7 +24,7 @@ Runtime: <codex | claude | other>
 
 | Claim area | Source | Inspected at | Authority | Notes |
 |---|---|---|---|---|
-| Workbook topology | | | live-db/local/historical/user | |
+| Workbook topology | | | cli/artifact/historical/user/inference | |
 
 ## Object Inventory
 

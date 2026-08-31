@@ -4,25 +4,25 @@
 
 | Object | Plain-language meaning | What proves it |
 |---|---|---|
-| Workbook | Container holding Datasets and their connections | `workbooks` row plus joined Datasets/connections |
-| Dataset | Table/inbox containing rows | `datasets` row and `field_catalog` shape |
-| Source | Mechanism that creates Dataset rows, such as webhook, manual input, import, or integration | `dataset_sources.kind`; inspect only safe config keys |
-| Saved Workflow | Reusable recipe; it does not watch a Dataset by itself | `workflows` plus its latest `workflow_revisions` row |
-| Connection | Conveyor belt attaching one input Dataset to one saved Workflow and creating an output Dataset | `workflow_dataset_connections` row |
-| Integration node | Outside service consulted by a Workflow | Safe `uses` projection from `workflow_revisions.draft.nodes` |
-| Internal Dataset push | A Workflow explicitly writes a handoff row to another Dataset | `pushToDataset` node and its explicit `datasetId` only |
-| Connection output Dataset | Dataset created by the connection for Workflow outputs and receipts | `workflow_dataset_connections.output_dataset_id` |
-| External coordinator/worker | Cloud process that detects, leases, retries, or delivers work outside the native connection chain | Current source/config documentation plus database run/state evidence |
+| Workbook | Container holding Datasets and their connections | `freckle workbook inspect` |
+| Dataset | Table/inbox containing rows | Workbook or Dataset inspect output and its field catalog |
+| Source | Mechanism that creates Dataset rows, such as webhook, manual input, import, or integration | `freckle workbook dataset source list`; keep endpoint URLs secret |
+| Saved Workflow | Reusable recipe; it does not watch a Dataset by itself | `freckle workflow saved inspect` and the current CLI-exported draft |
+| Connection | Conveyor belt attaching one input Dataset to one saved Workflow and creating an output Dataset | Workbook inspect output |
+| Integration node | Outside service consulted by a Workflow | Node definition keys in the current CLI-exported draft; do not reproduce config |
+| Internal Dataset push | A Workflow explicitly writes a handoff row to another Dataset | Push to Dataset node and its explicit target Dataset ID in the current CLI-exported draft |
+| Connection output Dataset | Dataset created by the connection for Workflow outputs and receipts | Connection output Dataset ID in Workbook inspect output |
+| External coordinator/worker | Process outside the visible Freckle connection chain | Dated user-supplied documentation plus any safe CLI evidence; otherwise label unknown |
 
 ## Evidence Precedence
 
 Use the most current direct evidence available:
 
-1. Live read-only database inspection of the exact object.
-2. Saved revision/draft retrieved from the system.
-3. Current local source that is proven equal to the saved revision.
-4. Current architecture document.
-5. Historical run evidence.
+1. Authenticated CLI inspection of the exact Workbook, Dataset, connection, source, or saved Workflow.
+2. Current Workflow draft exported by the CLI and tied to the inspected saved revision.
+3. Recent bounded CLI run status.
+4. Current local source or architecture document with a proven relationship to the inspected object.
+5. Historical artifact.
 6. User statement.
 7. Inference.
 
@@ -30,19 +30,19 @@ Do not let a lower-precedence intention override a higher-precedence current sta
 
 ## Read-Only Inspection Pattern
 
-Load the `db-query` skill and use the read-only Postgres connection. Never use the Freckle CLI or product APIs for this skill.
+Load the `freckle` skill and use only the authenticated Freckle CLI. Never use an internal database or call Freckle APIs directly.
 
 Typical inspection sequence:
 
-1. Resolve the target row and derive `customer_id`.
-2. Verify relevant columns and indexes.
-3. Query Workbook, Dataset, source-kind, and connection topology using safe columns.
-4. Query attached saved Workflows and latest revision metadata.
-5. Project only Workflow node `uses` values and approved structural fields; never retrieve whole drafts into chat or the journal.
-6. Inspect connection trigger policies and recent run state from execution tables.
-7. Compare local artifacts only after establishing their relationship to the saved database revision.
+1. Resolve the exact target and pin its organization through the `freckle` skill.
+2. Inspect the Workbook graph or saved Workflow identity.
+3. Inventory Datasets, source kinds, connections, trigger policies, and input/output relationships.
+4. Inspect each attached saved Workflow and export its current draft to the private task-specific temporary folder.
+5. Extract only node families, graph edges, branch labels, and explicit Dataset destinations; never reproduce config or bindings.
+6. Inspect bounded connection or Workflow run lists only when recent activation or health matters.
+7. Compare user-supplied artifacts only after establishing their relationship to the CLI-inspected object.
 
-Follow [database-inspection.md](database-inspection.md) for query templates and safety boundaries. Never invoke a Workflow or run a Dataset row for explanation work.
+Follow [cli-inspection.md](cli-inspection.md) for commands and safety boundaries. Never invoke a Workflow or run a Dataset row for explanation work.
 
 ## Dataset Classification
 
@@ -65,9 +65,9 @@ Label every arrow with one mechanism:
 - webhook/source creates row;
 - automatic connection runs on row arrival;
 - manual connection requires an explicit row run;
-- Workflow `pushToDataset` creates a new row;
+- Workflow Push to Dataset creates a new row;
 - integration node reads/enriches data but does not move the row;
-- external coordinator polls/claims/delivers;
+- documented external coordinator polls, claims, or delivers;
 - disabled writer describes an action but does not execute it.
 
 ## Common Traps
@@ -78,9 +78,9 @@ Label every arrow with one mechanism:
 - A receipt Dataset is not automatically the authoritative business table.
 - An HTTP integration call is not a Dataset handoff.
 - A failed node may prevent downstream branching; verify whether recovery occurs inside or outside the Workflow.
-- A connection described as “future auto” is still manual until inspected otherwise.
-- “Writes disabled” in one adapter does not prove every external writer is disabled; inspect each relevant boundary.
+- A connection described as “future auto” is still manual until its inspected trigger policy says otherwise.
+- “Writes disabled” in one adapter does not prove every external writer is disabled; inspect each visible boundary and label invisible ones unknown.
+- A bounded run list proves only the inspected window, not all history.
+- A CLI-exported draft proves configured Workflow structure, not whether a Workbook connection is automatic or recently active.
 - Multiple Workflows can live in one system even when the UI emphasizes one Dataset or connection at a time.
-- `workflow_run_views` and `workflow_node_run_views` are projection tables, not SQL views; compare their timestamps with base run tables before treating them as perfectly current.
-- Every tenant-scoped join must include `customer_id`, even when UUIDs appear globally unique.
 - IDs prove identity; names explain meaning. Use both selectively.

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Explain Freckle System"
-  short_description: "Turn Freckle topology into clear GTM explanations"
-  default_prompt: "Use $explain-freckle-system to inspect this Freckle system through the authenticated CLI and explain how its Datasets, Workflows, connections, integrations, and fallback paths fit together."

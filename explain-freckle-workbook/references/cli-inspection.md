@@ -1,6 +1,6 @@
 # Read-Only CLI Inspection
 
-Use this reference for every live inspection performed by `explain-freckle-system`.
+Use this reference for every live inspection performed by `explain-freckle-workbook`.
 
 ## Operating Boundary
 

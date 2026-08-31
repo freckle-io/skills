@@ -1,0 +1,4 @@
+interface:
+  display_name: "Explain Freckle Workbook"
+  short_description: "Turn Freckle Workbooks into clear GTM explanations"
+  default_prompt: "Use $explain-freckle-workbook to inspect this Freckle Workbook through the authenticated CLI and explain how its Datasets, Workflows, connections, integrations, and fallback paths fit together."

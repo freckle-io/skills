@@ -6,6 +6,7 @@ or Codex and they teach your coding agent a complete Freckle workflow.
 | Skill | What it does |
 |---|---|
 | [clay-to-freckle](clay-to-freckle/) | Migrate a Clay table or Workbook into Freckle, including logic, testing, and optional historical data. |
+| [explain-freckle-system](explain-freckle-system/) | Inspect a live Freckle system through the read-only database and explain its topology, execution paths, integrations, fallbacks, and operating state. |
 | [share-freckle-workbook](share-freckle-workbook/) | Turn any Freckle workflow into a single shareable LinkedIn image — a consolidated DAG on a product-canvas card with outcome stats and attribution. |
 
 ## Installing a skill

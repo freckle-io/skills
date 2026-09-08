@@ -1,9 +1,5 @@
 # Legacy handoff router
 
-Older journals may point here. Route them without rebuilding completed assets:
+Older journals may point here. Require or create a human-approved `system-plan.json`, then route all destination shapes through [build-workbook.md](build-workbook.md) and [replay-test.md](replay-test.md).
 
-- Individual table: [build-table.md](build-table.md)
-- Workbook: [build-workbook.md](build-workbook.md)
-- Post-build validation: [replay-test.md](replay-test.md)
-
-The initial import is the three-row historical preview only. Replay uses separate isolated fixtures. If the user later approves historical data migration, import by `Clay Record ID` set difference and idempotent upsert; do not execute historical rows through the Workflow.
+Do not rebuild completed compatible assets. Do not import the Clay schema or preview rows automatically. Historical migration uses a separately approved lean manifest after replay and cleanup.

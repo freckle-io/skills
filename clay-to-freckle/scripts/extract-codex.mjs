@@ -13,6 +13,18 @@
 // confirms the roster with the user and re-invokes this wrapper once per table.
 // Table extraction defaults to a three-record build sample. `--all` is reserved
 // for the explicitly approved historical data-migration phase.
+//
+// Sandboxed hosts: when the host cannot launch Chrome at all (Codex seatbelt,
+// containers — Chrome crashes on startup), escalate in order:
+//   1. `--no-chrome-sandbox` — Chrome's own sandbox may not nest inside another.
+//   2. `--connect-cdp <port|endpoint>` — ATTACH to a Chrome the user launched
+//      themselves (`"<chrome>" --remote-debugging-port=9222`). It runs outside the
+//      sandbox and is already signed in; this script only connects, reuses an
+//      app.clay.com tab when present, and disconnects without closing anything it
+//      did not open. `--runtime-check --connect-cdp <port>` verifies the attach.
+//   3. Have the user run this script from a normal terminal outside the sandbox.
+// An unwritable profile dir is non-fatal: it prints C2F_NOTE and uses a temp
+// profile (sign-in simply is not retained).
 
 import fs from 'node:fs';
 import os from 'node:os';
@@ -54,9 +66,10 @@ try {
 const rawArgs = process.argv.slice(2);
 const runtimeCheck = rawArgs.includes('--runtime-check');
 const listTables = rawArgs.includes('--list-tables');
-const VALUE_FLAGS = ['--skip', '--max', '--chrome-path', '--batch', '--concurrency'];
+const noChromeSandbox = rawArgs.includes('--no-chrome-sandbox');
+const VALUE_FLAGS = ['--skip', '--max', '--chrome-path', '--batch', '--concurrency', '--connect-cdp'];
 const positional = rawArgs.filter((arg, index) => {
-  if (arg === '--runtime-check' || arg === '--list-tables' || arg === '--all') return false;
+  if (arg === '--runtime-check' || arg === '--list-tables' || arg === '--all' || arg === '--no-chrome-sandbox') return false;
   if (VALUE_FLAGS.includes(rawArgs[index - 1])) return false;
   return !VALUE_FLAGS.includes(arg);
 });
@@ -76,8 +89,15 @@ const maxRecords = allRecords ? 'ALL' : String(Number.parseInt(maxRaw, 10) || 3)
 const batchSize = valueAfter('--batch', '');
 const concurrency = valueAfter('--concurrency', '');
 
+// Attach mode: connect to a Chrome the USER launched with --remote-debugging-port,
+// instead of launching one here. This is the escape hatch for agent hosts whose
+// sandbox cannot start Chrome (Codex seatbelt/containers): the browser runs as the
+// user's own process, outside the sandbox, already signed in to Clay.
+const cdpRaw = valueAfter('--connect-cdp', process.env.C2F_CDP_ENDPOINT || '');
+const cdpEndpoint = !cdpRaw ? '' : (/^\d+$/.test(String(cdpRaw).trim()) ? `http://127.0.0.1:${String(cdpRaw).trim()}` : String(cdpRaw).trim());
+
 if (!runtimeCheck && (!targetUrl || !outputPath)) {
-  fail('Usage: node extract-codex.mjs <Clay table URL> <output.json> [--max N | --all] [--skip N] [--batch N] [--concurrency N] [--chrome-path PATH]\n       node extract-codex.mjs --list-tables <Clay workbook URL> <output.json> [--chrome-path PATH]');
+  fail('Usage: node extract-codex.mjs <Clay table URL> <output.json> [--max N | --all] [--skip N] [--batch N] [--concurrency N] [--chrome-path PATH] [--connect-cdp PORT|ENDPOINT] [--no-chrome-sandbox]\n       node extract-codex.mjs --list-tables <Clay workbook URL> <output.json> [--chrome-path PATH] [--connect-cdp PORT|ENDPOINT]');
 }
 
 const candidates = [
@@ -101,8 +121,9 @@ const chromePath = candidates.find((candidate) => {
   }
 });
 
-if (!chromePath) {
-  fail('No supported local Chrome/Chromium executable was found. Set C2F_CHROME_PATH to an executable browser path.');
+// Attach mode never launches a browser, so a local executable is irrelevant there.
+if (!chromePath && !cdpEndpoint) {
+  fail('No supported local Chrome/Chromium executable was found. Set C2F_CHROME_PATH to an executable browser path, or attach to a user-launched Chrome with --connect-cdp <port>.');
 }
 
 let parsedUrl;
@@ -132,18 +153,37 @@ if (!runtimeCheck) {
 const persistentProfileDir = path.resolve(
   process.env.C2F_PROFILE_DIR || path.join(os.homedir(), '.codex', 'browser-profiles', 'clay-to-freckle')
 );
-const profileDir = runtimeCheck
-  ? fs.mkdtempSync(path.join(os.tmpdir(), 'clay-to-freckle-check-'))
-  : persistentProfileDir;
-if (!runtimeCheck) fs.mkdirSync(profileDir, { recursive: true, mode: 0o700 });
+// A sandboxed host (Codex workspace-write, containers) may not allow writes under
+// $HOME. Fall back to a temp profile rather than dying — the only cost is that the
+// Clay sign-in is not retained between runs.
+let profileFallbackReason = null;
+const ensureProfileDir = (dir) => {
+  try { fs.mkdirSync(dir, { recursive: true, mode: 0o700 }); fs.accessSync(dir, fs.constants.W_OK); return dir; }
+  catch (error) {
+    profileFallbackReason = `${dir} is not writable (${error?.code || error?.message}); using a temporary profile — sign-in will not persist.`;
+    return fs.mkdtempSync(path.join(os.tmpdir(), 'clay-to-freckle-profile-'));
+  }
+};
+const profileDir = cdpEndpoint ? null
+  : runtimeCheck ? fs.mkdtempSync(path.join(os.tmpdir(), 'clay-to-freckle-check-'))
+  : ensureProfileDir(persistentProfileDir);
 let context;
+let cdpBrowser = null;
+let createdPage = null;
 let cleaningUp = false;
 
 const cleanup = async () => {
   if (cleaningUp) return;
   cleaningUp = true;
-  try { await context?.close(); } catch { /* best effort */ }
-  if (runtimeCheck) {
+  if (cdpBrowser) {
+    // Attached to the user's own Chrome: close only a tab we opened, then
+    // DISCONNECT. Never close their context — that would kill their tabs.
+    try { await createdPage?.close(); } catch { /* best effort */ }
+    try { await cdpBrowser.close(); } catch { /* best effort */ }
+  } else {
+    try { await context?.close(); } catch { /* best effort */ }
+  }
+  if (runtimeCheck && profileDir) {
     try { fs.rmSync(profileDir, { recursive: true, force: true }); } catch { /* best effort */ }
   }
 };
@@ -152,20 +192,54 @@ process.once('SIGINT', () => cleanup().finally(() => process.exit(130)));
 process.once('SIGTERM', () => cleanup().finally(() => process.exit(143)));
 
 try {
-  context = await chromium.launchPersistentContext(profileDir, {
-    executablePath: chromePath,
-    headless: runtimeCheck,
-    args: ['--no-first-run', '--no-default-browser-check'],
-    viewport: null
-  });
+  if (cdpEndpoint) {
+    try {
+      cdpBrowser = await chromium.connectOverCDP(cdpEndpoint);
+    } catch (error) {
+      const attachError = new Error(`Could not attach to Chrome at ${cdpEndpoint}: ${error?.message || error}. Have the user launch Chrome with a debugging port first — quit Chrome fully, then run:  "${chromePath || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'}" --remote-debugging-port=9222`);
+      attachError.exitCode = 4;
+      throw attachError;
+    }
+    context = cdpBrowser.contexts()[0] || await cdpBrowser.newContext();
+  } else {
+    try {
+      context = await chromium.launchPersistentContext(profileDir, {
+        executablePath: chromePath,
+        headless: runtimeCheck,
+        // --no-sandbox is opt-in: Chrome's own sandbox cannot always initialize
+        // inside another sandbox (Codex seatbelt, containers), which shows up as an
+        // immediate crash on startup.
+        args: ['--no-first-run', '--no-default-browser-check',
+          ...(noChromeSandbox ? ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] : [])],
+        viewport: null
+      });
+    } catch (error) {
+      const hint = noChromeSandbox
+        ? 'Chrome still failed to start with --no-sandbox. This host cannot launch a browser; attach to a user-launched Chrome instead: have the user quit Chrome, run  "<chrome> --remote-debugging-port=9222", then re-run this script with --connect-cdp 9222. Running the script from a normal terminal (outside the agent sandbox) also works.'
+        : 'Chrome failed to start. If this host is sandboxed (Codex, a container), retry once with --no-chrome-sandbox; if that also fails, attach to a user-launched Chrome with --connect-cdp 9222, or run this script from a normal terminal outside the sandbox.';
+      const launchError = new Error(`${error?.message || error}\n${hint}`);
+      launchError.exitCode = 5;
+      throw launchError;
+    }
+  }
 
   if (runtimeCheck) {
-    console.log(JSON.stringify({ ok: true, chromePath, playwright: true }));
+    console.log(JSON.stringify({ ok: true, chromePath: chromePath || null, playwright: true, mode: cdpEndpoint ? 'attached' : 'launched', endpoint: cdpEndpoint || null, profileFallback: profileFallbackReason }));
     await cleanup();
     process.exit(0);
   }
 
-  let page = context.pages()[0] || await context.newPage();
+  if (profileFallbackReason) console.log(`C2F_NOTE ${profileFallbackReason}`);
+
+  // In attach mode, reuse an existing app.clay.com tab when there is one so the
+  // user's own browsing is left alone; only open (and later close) our own tab.
+  let page = null;
+  if (cdpEndpoint) {
+    page = context.pages().find((candidate) => !candidate.isClosed() && candidate.url().startsWith('https://app.clay.com')) || null;
+    if (!page) { page = await context.newPage(); createdPage = page; }
+  } else {
+    page = context.pages()[0] || await context.newPage();
+  }
   await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30_000 });
 
   const signInTimeoutMs = Number.parseInt(process.env.C2F_SIGNIN_TIMEOUT_MS || '600000', 10);

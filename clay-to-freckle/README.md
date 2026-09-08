@@ -1,19 +1,20 @@
 # Clay to Freckle
 
-Move a Clay table or Workbook into Freckle without rebuilding the enrichment logic by hand.
+Reconstruct a Clay table or Workbook as a lean, Freckle-native system.
 
-This skill reads the table structure, formulas, prompts, enrichment steps, conditions, and sample results from Clay. It then works with the Freckle skill to build the equivalent datasets and workflows, test them against the same inputs, and give you the option to bring over the rest of the historical data.
+This skill reads Clay's configuration and sample results, identifies the business capabilities and intended outcomes, and asks you to approve what should move. It then works with the Freckle skill to build and test the approved system. Clay's columns are evidence, not a schema to copy wholesale.
 
 It works in both Codex and Claude Code.
 
 ## What it can migrate
 
-- One Clay table into a Freckle workflow
-- A full Clay Workbook into one Freckle Workbook
-- Formulas, prompts, waterfalls, run conditions, and enrichment intent
-- Existing columns and historical values
-- Live references to other Clay tables, when you choose to include them
-- Pure data tables that have no enrichment logic
+- A Clay table, Workbook, or connected group of tables
+- Business behavior from formulas, prompts, waterfalls, run conditions, and routing
+- Required enrichment inputs, stage handoffs, and final Dataset fields
+- External actions such as CRM writes, with explicit mappings and live-action gates
+- Reference data and historical values that belong in the approved destination contract
+
+The destination may be a Workflow, a chained Workbook, a Dataset/reference, reusable utilities, or no asset for intentionally excluded behavior. Related tables can become stages inside the same Workbook when you approve their inclusion.
 
 Clay's separate Workflows product, identified by `wf_...` URLs, is outside the current scope.
 
@@ -52,31 +53,32 @@ You stay in one conversation. The skill may use sub-agents for table preparation
 
 ## What happens during a migration
 
-1. **Read the Clay setup.** The skill uses your signed-in Clay session to extract the complete configuration and three representative rows from each table.
-2. **Map the logic.** It translates the Clay setup into the business capability Freckle needs to reproduce. Freckle chooses the current provider or primitive that fits the job.
-3. **Review the plan.** You get a concise summary before anything is built.
-4. **Build in Freckle.** A table becomes a workflow. A Workbook becomes one shared Freckle Workbook, with independent tables built in parallel where safe.
-5. **Replay the same inputs.** The skill runs the same three source inputs through Freckle and compares the new results with the stored Clay outputs.
-6. **Choose whether to migrate the data.** Once replay testing finishes, you can import the remaining historical Clay rows or leave them where they are.
+1. **Read the Clay setup.** Extract the complete configuration and three representative rows per table. Discover live reads and writes to other tables and ask which connected tables to include.
+2. **Define the outcomes.** Identify what must remain: final Dataset results, external actions, handoffs, or intentional status/no-op behavior. A Dataset can be the final product without a later action.
+3. **Review the plan.** Approve each table's disposition, the business primitives, the destination contracts, and meaningful omissions. Required formula behavior survives; intermediate fields are kept only when needed.
+4. **Build in Freckle.** Build the approved destination graph using current Freckle primitives, carrying only the data needed by downstream stages or final consumers.
+5. **Replay and review.** Replay the same three source inputs and targeted branch cases. Check final results and dry-run action payloads, then summarize meaningful omissions and give you the option to restore them. Changed contracts require an updated plan and affected tests to run again.
+6. **Choose whether to migrate the data.** Once testing and omission review are resolved, you can import historical rows into the approved lean contract or leave them in Clay.
 
 The initial three rows keep migrations fast. They give you enough real data to inspect the schema and test the new logic without importing hundreds of records before you know the build works.
 
 ## Table and Workbook migrations
 
-An individual table follows a short path: inspect, build, test, then optionally migrate its data.
+The entry URL determines where inspection starts, not the destination architecture. Both individual-table and Workbook migrations inspect live cross-table references before planning.
 
-A Workbook migration also handles the table roster, cross-table references, repeated enrichment capabilities, build order, and coordinated testing. Every migrated table lives inside the same Freckle Workbook.
+When Clay sends rows to another table that continues the same business process, the skill proposes bringing it into the same migration and asks whether to include all connected tables, choose some, or leave them as explicit boundaries. It resolves references from configuration rather than guessing from column names.
 
-If a Clay column points to a table outside the Workbook, the skill shows you the source table and asks whether you want to include it. It does not guess from column names.
+Every analyzed table gets a human-approved disposition: recreate, fold into another asset, consolidate with duplicate behavior, embed as reference data, keep standalone, defer, or exclude. Approval of the table roster alone does not authorize building.
 
 ## Safety and data handling
 
 - Every pasted Clay URL starts a fresh local run unless you ask to resume a specific one.
 - Extracted data stays in a local, gitignored run folder until it goes into your Freckle organization.
-- Historical rows use stable Clay record IDs, so retries do not create duplicate imports.
+- Historical imports use the approved identity and deduplication rules. Clay record IDs are optional provenance, not a mandatory live input.
 - Imported history does not rerun paid enrichments.
 - Tests disable or defer actions that could push to a CRM, sequencer, messaging tool, or another external system.
-- Full historical data migration requires a separate approval after the build and replay tests finish.
+- Completion requires resolved omission choices. Restoring behavior updates the plan and triggers affected tests before continuing.
+- Full historical data migration requires a separate approval after the build, replay tests, and omission review finish.
 
 ## Requirements
 

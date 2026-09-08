@@ -1,111 +1,100 @@
 ---
 name: clay-to-freckle
-description: Migrate one Clay table or an entire Clay workbook into Freckle quickly. Extracts full signed-in Clay v3 configuration plus three representative rows, translates Clay logic into provider-neutral capability intent, lets Freckle choose current primitives, builds approved assets before coordinated replay tests, and offers historical data migration only at the end. Workbook runs add dependency discovery, shared primitive-family planning, and bounded parallel builds; individual-table runs deliberately skip that machinery.
+description: Reconstruct a Clay table or workbook as a lean, Freckle-native system. Use when the user wants to analyze or migrate Clay into Freckle, including table disposition, business primitives, minimal contracts, guarded build, parity testing, and optional historical backfill.
 ---
 
 # Clay → Freckle
 
-Give the user one continuous experience. Use sub-agents internally when available; never ask the user to manage sessions.
+Treat Clay as implementation evidence, not as the destination schema. The default is a semantic reconstruction: understand the system, decide what should survive, obtain human approval, then build the smallest Freckle shape that preserves the required behavior.
 
-## Route first
+Use the current `/freckle` skill for every Freckle read or mutation. Clay evidence describes behavior; it does not justify inventing Freckle primitives.
 
-Classify the pasted URL immediately:
+## Route by source, not destination
 
-- `wb_…` → **Workbook track**.
-- `t_…` → **Individual-table track**.
-- `wf_…` → reject; Clay Workflows are a different product.
+- `t_…`: extract the starting table, then discover its live table reads and writes. The user may expand the same run to those connected tables.
+- `wb_…`: enumerate live tables, resolve active references, and confirm the analysis roster.
+- `wf_…`: stop; Clay Workflows require a different migration path.
 
-Follow [references/migration-tracks.md](references/migration-tracks.md). Never apply Workbook-only roster, reference-expansion, primitive-family, shared-Workbook, or dependency-wave steps to an individual table.
+Source scope controls extraction only. Either source may become one Workflow, a chained Workbook, a Dataset/reference, several utilities, or no Freckle asset. See [references/migration-tracks.md](references/migration-tracks.md).
 
-| Lane | Track | Instruction |
-|---|---|---|
-| Extract | Both | [specialists/extract.md](specialists/extract.md) |
-| Prepare Workbook | Workbook only | [specialists/prepare-workbook.md](specialists/prepare-workbook.md) |
-| Translate logic | Both | [specialists/translate.md](specialists/translate.md) |
-| Build table | Individual table only | [specialists/build-table.md](specialists/build-table.md) |
-| Build Workbook | Workbook only | [specialists/build-workbook.md](specialists/build-workbook.md) |
-| Replay test | Both | [specialists/replay-test.md](specialists/replay-test.md) |
+## Non-negotiable method
 
-Only the root orchestrator selects lanes and collects results into the run journal. Specialists stop at their exit contract; they do not cascade directly into another lane.
+1. Start a fresh journal with `scripts/new-run.js` unless the user explicitly supplies a run path and says to resume.
+2. Extract complete signed-in Clay configuration and three representative rows per table through [specialists/extract.md](specialists/extract.md). Keep raw prompts, formulas, envelopes, and columns in local evidence.
+3. Run `scripts/discover-references.js $JOURNAL` for either source track. Show every resolved live target with direction, triggering field, row count, and Clay link. For outbound `route-row` writes, recommend bringing the downstream tables into the same migration when they continue the business process, then ask whether to include all, choose some, or keep them as boundaries. Never silently skip them because the entry URL named one table.
+4. Extract included targets into the same journal and repeat discovery until no undecided live targets remain. Opaque `t_…` strings in provider/CRM metadata are not scope candidates.
+5. Prepare compact source briefs with `scripts/prepare-table.js`. Use [specialists/translate.md](specialists/translate.md) only to resolve business behavior that is not clear from the extract.
+6. Build system evidence with `scripts/plan-primitive-families.js $JOURNAL`. Define the intended outcomes and meaningful omissions before pruning dependencies, then write one compact `$JOURNAL/system-plan.json` following [references/brief-format.md](references/brief-format.md).
+7. Ask `/freckle` to map only the surviving capabilities to current Freckle primitives and append those implementation choices to the system plan.
+8. Render one review with `scripts/render-review.js $JOURNAL`. Present it, then ask a separate short approval question. Do not mutate Freckle before approval.
+9. Build the approved destination graph through [specialists/build-workbook.md](specialists/build-workbook.md). The filename is historical; it handles every destination shape. `build-table.md` is only a compatibility router.
+10. Announce the verified Freckle URL after all approved assets exist and before replay begins.
+11. Run [specialists/replay-test.md](specialists/replay-test.md), present actual omissions with the option to restore them, clean temporary assets, and record the outcome.
+12. Offer historical migration last. Backfill only the approved lean contract; never import the entire Clay schema by default.
 
-## Load-bearing invariants
+## System plan gate
 
-- Extract complete table configuration, schema, sources, prompts, formulas, conditions, and action envelopes, but only **three representative records per table** initially.
-- Preserve all Clay columns. `Clay Record ID` is the stable upsert key.
-- Preview rows contain historical values and `Imported from Clay = true`; they never re-enrich.
-- Replay fixtures use the same three original inputs, omit generated outputs, and set `Imported from Clay = false`. Never append replay fixtures to the production input Dataset.
-- Clay translation specifies capability intent, inputs, outputs, conditions, provider semantics, and acceptance criteria. It never chooses Freckle nodes, providers, or workarounds. The current `/freckle` skill alone owns implementation.
-- Build all approved assets before testing. Disable, defer, or dry-run external push side effects during tests.
-- Historical data migration is optional and happens only after build and replay validation.
-- Extracted data stays local except for imports into the user's authenticated Freckle organization. Give the privacy disclosure once.
+Every analyzed table receives exactly one disposition:
 
-## Fresh run first
+- `recreate`: it owns behavior that must remain a distinct destination asset.
+- `fold`: its behavior becomes a stage or branch inside another asset.
+- `consolidate`: duplicate tables collapse into one reusable capability.
+- `embed`: small stable reference data becomes configuration or a narrow Dataset.
+- `standalone`: reusable utility remains outside the main chain.
+- `defer`: a real boundary is documented but not built now.
+- `exclude`: obsolete, one-off, audit-only, or Clay-native behavior is intentionally omitted.
 
-A pasted Clay URL starts fresh unless the user explicitly says **resume**.
+The human approves these choices, intended outcomes, meaningful changes, and target architecture. A table roster is not build authorization.
 
-1. Immediately run `node <skill>/scripts/new-run.js <Clay-URL> <working-directory>` and retain the returned absolute path as `$JOURNAL`.
-2. Before that, do not search for, inspect, reconcile, compare, or mention old journals. Identical targets do not change this rule.
-3. Resume only from an exact run path explicitly supplied or already explicit in the active conversation.
-4. `$JOURNAL/state.json` is authoritative; `state.md` is generated. Only the root orchestrator mutates shared state.
+## Contract minimization
 
-## Shared flow
+Backward-slice from approved business sinks across all included tables. Define each sink in `destination.outcomes`: a final Dataset, external write, handoff/export, or intentional status/no-op. State its consumer, required fields, what one result represents, conditions, and empty/error behavior. A Dataset can be the final product without any later action.
 
-1. Extract through [specialists/extract.md](specialists/extract.md). Prefer the authenticated wrapper; never use Clay CLI/MCP or manual CSV export.
-2. Prepare each table with `scripts/prepare-table.js`. This creates `data.csv` for historical preview and `replay-fixtures.json` for isolated testing.
-3. For logic tables, use [specialists/translate.md](specialists/translate.md) to describe intent without selecting Freckle primitives.
-4. Present a short readable review, link the artifact, and request approval with a separate question of at most 15 words.
-5. Build through the current `/freckle` skill. Use [specialists/build-table.md](specialists/build-table.md) for a table or [specialists/build-workbook.md](specialists/build-workbook.md) for a workbook.
-6. Once all approved assets exist, send: **Everything is built and testing is underway:** with a link constructed from the verified ID: `https://next.freckle.io/workbooks/<id>` for a Workbook or `https://next.freckle.io/tools/<id>` for a Workflow. Never emit `app.freckle.io`. Do this before replay execution.
-7. Run [specialists/replay-test.md](specialists/replay-test.md), comparing Freckle results with stored Clay outputs for the same three inputs.
-8. Present one consolidated report. Then ask: `Migrate the remaining Clay data now?` Choices: `Migrate all`, `Choose tables` (Workbook only), `Not now`.
-9. If approved, extract all remaining records with `--all`, compute Clay-record-ID set difference, and idempotently import historical rows directly. Do not run every historical row through the workflow.
+Trace both data and control dependencies through enrichment, matching, dedupe, validation, routing, and external write mappings. Keep only source fields and intermediate values on those paths, plus approved human-facing final fields and necessary operational evidence.
 
-## Workbook track
+Preserve required formula behavior; inline helpers when their intermediate values need no consumer. Drop unreachable logic. A formula with no detected dependent column is only an outcome candidate, and “no consumer identified” is an uncertainty when a human may use the value. Put such proposed omissions in the review.
 
-1. Enumerate live tables and confirm one roster.
-2. Discover active `t_…` references with `scripts/discover-references.js`. Show each resolved target with a clickable Clay URL and ask whether to include it. A lookup-like name without live configuration proves nothing.
-3. Prepare tables concurrently in isolated directories using [specialists/prepare-workbook.md](specialists/prepare-workbook.md).
-4. Run `scripts/plan-primitive-families.js $JOURNAL`. Ask `/freckle` to resolve each unique capability family once; reuse that decision across matching tables.
-5. Create one shared Freckle Workbook. Build independent table/family assets with bounded parallel workers; serialize only shared Workbook creation, cross-table wiring, and conflicting shared mutations. See [references/subagent-contracts.md](references/subagent-contracts.md).
-6. Replay tests in dependency waves, concurrently within each safe wave. Publish one Workbook report.
+Classify surviving fields as `source_input`, `stage_handoff`, or `final_output`. Use explicit stage dependencies and carry only needed context across each handoff. Keep raw envelopes, aliases, and test diagnostics local unless an approved outcome needs them.
 
-## Individual-table track
+`Clay Record ID` is optional historical provenance, not a universal live key. Prefer the actual source identifier, CRM object ID, or a keyless batch when that is the real contract.
 
-Use the lean path: extract → prepare/translate → review → direct Freckle plan/build → three-input replay → optional historical data migration.
+## Architecture rules
 
-Do not enumerate a roster, expand dependencies, group primitive families, create Workbook-wide schedules, or coordinate cross-table test waves. If the table contains an external active reference, document it as a boundary; do not turn a table request into a Workbook migration without the user's approval.
+Split stages only at meaningful boundaries: responsibility, reuse, cost/retry, fan-out, trigger/cadence, human approval, or external side effects. Prefer explicit chaining, but do not force a fixed stage count.
 
-## Reference handling
+- Reuse an existing Freckle Workflow only after input/output contract compatibility is verified.
+- Model the actual future upstream payload, not a Clay wrapper used only during migration.
+- Create a runtime audit Dataset only when a real operator or downstream consumer needs it. The journal holds migration evidence.
+- Human approval and unsupported listener/adapter boundaries are explicit gates or deferred components, not hidden workflow steps.
+- Disable writes, sends, enrollments, and other side effects until their live gate is approved.
 
-- Only a live `t_…` in Clay field/source configuration establishes a table relationship.
-- For a resolved external target, report the table name, source column, row count, and clickable Clay URL. In Workbook mode ask whether to add it.
-- For no active target, say only: “No active target is present in Clay's current configuration.” Never claim a lookup was flattened, removed, or formerly linked.
+## Testing
 
-## Testing and completion
+Use three real same-input business cases against the approved lean contract, plus the smallest synthetic branch fixtures needed for high-risk logic. Relevant examples include provider miss, existing CRM record, rebrand, multi-segment fan-out, and write-gate behavior.
 
-Follow [references/replay-testing.md](references/replay-testing.md).
+Verify each declared outcome: final fields and row meaning, empty/error results, handoff continuity, and external write payloads, matching, and overwrite rules in dry-run form. Compare deterministic behavior exactly and provider/AI results against the approved business contract. A retained email waterfall is preserved capability; never report changes in provider, node, formula, or step counts.
 
-- Deterministic formulas: exact comparison after normalization.
-- Provider/API enrichments: compare the business contract, not incidental envelope shape.
-- AI/research steps: compare directionally against explicit acceptance criteria.
-- Pure-data tables: validate schema and the three-row preview; no workflow replay is required.
-- Complete only when every included asset is built, replay validation is recorded, and the historical-data decision is recorded.
+After replay, summarize actual omitted fields, capabilities, actions, and deferred boundaries with reasons, and offer restoration. Omit safely inlined helpers and equivalent implementations from that summary. Resolve restoration choices before completion; update the plan and rerun affected cases when a choice changes the contract. Follow [references/replay-testing.md](references/replay-testing.md).
 
-## Gate presentation
+## Context discipline
 
-Keep context and consent separate. First send a readable assistant message with short headings/bullets and clickable links. Then ask one plain question of 15 words or fewer. Never put recaps, IDs, caveats, or “sent above” inside the question control.
+- Full Clay evidence stays in `extract.json`; do not paste it into briefs or prompts.
+- Inspect outcome candidates and external action mappings before pruning; then read only evidence needed for surviving dependencies or uncertain omissions.
+- Resolve each repeated capability family once.
+- Keep the review to decisions, contracts, risks, and acceptance tests—not a column-by-column inventory.
+- When uncertainty could change scope, mark it in the plan for human decision instead of guessing.
 
-## Resources
+## Privacy and completion
 
-- [references/migration-tracks.md](references/migration-tracks.md) — explicit Workbook vs individual-table routing.
-- [references/replay-testing.md](references/replay-testing.md) — same-input parity method and safety.
-- [references/state-model.md](references/state-model.md) — idempotent state and resume rules.
-- [references/subagent-contracts.md](references/subagent-contracts.md) — preparation, build, and test worker ownership.
-- [specialists/extract.md](specialists/extract.md) — authenticated three-row extraction and approved full-data pull.
-- [specialists/prepare-workbook.md](specialists/prepare-workbook.md) — Workbook-only preparation and family plan.
-- [specialists/translate.md](specialists/translate.md) — provider-neutral intent brief.
-- [specialists/build-table.md](specialists/build-table.md) — lean individual-table builder.
-- [specialists/build-workbook.md](specialists/build-workbook.md) — shared Workbook and bounded parallel build.
-- [specialists/replay-test.md](specialists/replay-test.md) — isolated replay and comparison.
-- `scripts/build-replay-fixtures.js` — split historical preview from replay inputs.
-- `scripts/plan-primitive-families.js` — deduplicate Workbook capability families without selecting implementations.
+Give the privacy disclosure once. Extracted data remains local except for approved imports into the user's authenticated Freckle organization.
+
+Complete only when the approved assets exist, replay and branch checks are recorded, omission choices are resolved, temporary assets are cleaned, side-effect gates are explicit, and the historical-data decision is recorded.
+
+## References
+
+- [references/brief-format.md](references/brief-format.md) — compact evidence and `system-plan.json` contract.
+- [references/state-model.md](references/state-model.md) — journal, approval hashes, and resume rules.
+- [references/replay-testing.md](references/replay-testing.md) — business replay and branch coverage.
+- [references/subagent-contracts.md](references/subagent-contracts.md) — safe ownership when parallel workers are used.
+- [specialists/prepare-workbook.md](specialists/prepare-workbook.md) — analysis and plan coordinator for both source scopes.
+- [specialists/build-workbook.md](specialists/build-workbook.md) — destination-graph builder for all shapes.

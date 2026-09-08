@@ -20,18 +20,20 @@ if (fs.existsSync(out)) {
   process.exit(0);
 }
 atomicJson(out, {
-  version: 1,
+  version: 2,
   runId: state.runId,
   orgId: null,
-  workbookId: null,
-  decisions: {},
-  primitiveFamilies: {},
-  frecklePrimitivePlans: {},
-  nodeContracts: {},
-  importConstraints: { initialPreviewRows: 3, maxRowsPerHistoricalChunk: 500, maxBytesPerChunk: 1800000 },
-  deferredActions: [],
+  systemPlanPath: path.join(journal, 'system-plan.json'),
+  systemPlanSha256: null,
+  destinationAssets: [],
+  stageContracts: [],
+  verifiedReuseContracts: [],
+  deferredBoundaries: [],
+  safetyGates: [],
   buildWaves: [],
-  testWaves: [],
-  postBuildPatchTasks: []
+  testCases: [],
+  cleanupLedger: [],
+  importConstraints: { maxRowsPerHistoricalChunk: 500, maxBytesPerChunk: 1800000 },
+  historicalManifestPath: null
 });
 console.log(JSON.stringify({ ok: true, created: true, out }));

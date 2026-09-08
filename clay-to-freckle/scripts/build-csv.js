@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// clay-to-freckle CSV builder — deterministic journal/extract.json → journal/data.csv.
+// clay-to-freckle CSV builder — deterministic extract + approved lean manifest → CSV.
 //
-// Usage:  node build-csv.js <extract.json> <csv-manifest.json> <out.csv>
+// Usage:  node build-csv.js <extract.json> <approved-manifest.json> <out.csv>
 //
-// csv-manifest.json is written by the translate lane after column classification:
+// The manifest is written only after the system plan and historical contract are approved:
 //   { "columns": [ { "source": "recordId", "name": "Clay Record ID" },
 //                  { "fieldId": "f_…", "name": "Email" }, … ] }
 // Column order in the manifest is the CSV column order. Records come from

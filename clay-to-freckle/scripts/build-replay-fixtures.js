@@ -32,38 +32,27 @@ for (const bucket of ['success', 'no_data', 'error', 'other']) {
 }
 for (const record of records) if (selected.length < 3 && !selected.includes(record)) selected.push(record);
 
-const cellMap = (record, selectedFields) => Object.fromEntries(selectedFields.map((field) => [field.name, record.cells?.[field.id] ?? null]));
-const comparisonMode = (field) => {
-  if (field.type === 'formula') return 'exact';
-  if (/use-ai|claygent|research/i.test(field.typeSettings?.actionKey || '')) return 'directional';
-  return 'business_contract';
-};
-const sideEffectPattern = /push|send|campaign|sequence|slack|instantly|heyreach|create[-_ ]?(?:contact|company|deal)|update[-_ ]?(?:contact|company|deal)/i;
-const sideEffectFields = actionFields.filter((field) => sideEffectPattern.test(`${field.name} ${field.typeSettings?.actionKey || ''}`)).map((field) => ({ fieldId: field.id, fieldName: field.name, actionKey: field.typeSettings?.actionKey || null, replayPolicy: 'disabled_or_dry_run' }));
+const comparisonMode = (field) => field.type === 'formula' ? 'exact' : /use-ai|claygent|research/i.test(field.typeSettings?.actionKey || '') ? 'directional' : 'business_contract';
+const sideEffectPattern = /push|send|campaign|sequence|slack|webhook|create[-_ ]?(?:contact|company|deal)|update[-_ ]?(?:contact|company|deal)/i;
+const sideEffectFields = actionFields.filter((field) => sideEffectPattern.test(`${field.name} ${field.typeSettings?.actionKey || ''}`)).map((field) => ({ fieldId: field.id, fieldName: field.name, replayPolicy: 'disabled_or_dry_run' }));
 
 const fixture = {
-  version: 1,
+  version: 2,
+  candidateOnly: true,
   tableId: extract.tableId,
   tableName: extract.table?.name,
   sourceExtractRecords: records.length,
-  selectedRecords: selected.length,
-  selection: 'prefer success, no-data, and error/alternate outcomes from the available build sample; fill in source order',
-  cases: selected.map((record) => ({
-    clayRecordId: record.id,
-    outcomeBucket: statusBucket(record),
-    preview: { importedFromClay: true, values: cellMap(record, fields) },
-    replay: { importedFromClay: false, inputs: cellMap(record, inputFields), generatedOutputsOmitted: generatedFields.map((field) => field.name) },
-    clayExpected: cellMap(record, generatedFields)
-  })),
-  comparison: generatedFields.map((field) => ({ fieldId: field.id, fieldName: field.name, clayType: field.type, mode: comparisonMode(field) })),
+  selection: 'representative record pointers only; materialize values after the approved lean contract exists',
+  cases: selected.map((record) => ({ clayRecordId: record.id, outcomeBucket: statusBucket(record) })),
+  candidateInputFields: inputFields.map((field) => ({ fieldId: field.id, fieldName: field.name })),
+  candidateOutcomeFields: generatedFields.map((field) => ({ fieldId: field.id, fieldName: field.name, mode: comparisonMode(field) })),
   sideEffectFields,
   rules: {
-    replayExercisesFuturePath: true,
-    neverReplayHistoricalOutputsAsInputs: true,
-    doNotAppendReplayFixturesToProductionDataset: true,
-    exactMeansNormalizedExactMatch: true,
-    businessContractMeansCompareDownstreamOutcomeNotProviderEnvelope: true
+    readValuesFromExtractOnlyForApprovedFields: true,
+    neverUseProviderEnvelopesAsInputs: true,
+    neverAppendFixturesToProductionDataset: true,
+    addOnlyNamedHighRiskBranchCases: true
   }
 };
 atomicJson(out, fixture);
-console.log(JSON.stringify({ ok: true, tableId: fixture.tableId, cases: fixture.cases.length, comparisons: fixture.comparison.length, sideEffects: sideEffectFields.length, out }));
+console.log(JSON.stringify({ ok: true, tableId: fixture.tableId, cases: fixture.cases.length, inputCandidates: fixture.candidateInputFields.length, outcomeCandidates: fixture.candidateOutcomeFields.length, sideEffects: sideEffectFields.length, out }));

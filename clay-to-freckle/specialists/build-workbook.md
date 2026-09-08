@@ -1,19 +1,17 @@
-# Workbook builder
+# Destination-graph builder
 
-Own the `wb_…` build phase after approval. Read all approved briefs, `build-context.json`, `primitive-families.json`, table preparation results, and the current `/freckle` skill.
+Use after approval for every destination shape, whether the source was one table or a workbook.
 
-1. Ask `/freckle` to resolve each unique capability family once. Record the selected current Freckle primitives and contracts in shared build context. Clay artifacts provide intent and provider semantics only.
-2. One coordinator creates/reconciles the shared Freckle Workbook and freezes its ID before table workers begin.
-3. Derive build waves from cross-table dependencies and shared-resource conflicts.
-4. Run bounded parallel builders for independent tables/family assets. Each worker owns distinct Freckle assets and writes only its table's `build-result.json`; it never edits shared state or another result.
-5. Keep shared Workbook creation, conflicting shared mutations, and final cross-table wiring in the coordinator lane.
-6. Import only each table's three-row historical preview. Do not run workflows during the build phase.
-7. Reconcile every result and complete final wiring. Retry only failed tables; never duplicate completed assets.
-8. When every approved asset is built, tell the user: **Everything is built and testing is underway:** with `https://next.freckle.io/workbooks/<verified-workbook-id>`. Construct it from the ID; never echo an `app.freckle.io` host.
-9. Only then start coordinated replay tests.
-
-Parallelism is bounded by runtime slots and Freckle mutation safety, normally two or three independent builders. One slow provider investigation must not block unrelated table builds.
+1. Read the approved `system-plan.json`, its bound hash, build context, and current `/freckle` instructions. Do not infer assets from the Clay roster.
+2. Revalidate current Freckle primitives and every proposed reuse contract. If a material contract changes, update the plan and return to human approval.
+3. Reconcile stable destination identities, then create only the assets named in the plan. A `no_build` plan completes without mutations.
+4. Build in destination dependency order. Parallelize only distinct assets with explicit ownership. The coordinator owns shared Workbook creation and final wiring.
+5. Verify each stage's inputs against its declared immediate dependencies and reconcile the resulting connection mappings. Check outcome fields, row meaning, branch endings, and external action mappings against the approved plan. Clone a reusable Workflow when its contract cannot be safely changed in place.
+6. Keep external writes and sends disabled until the plan's live gate is satisfied. Implement unsupported listeners or approval surfaces only when explicitly in scope; otherwise preserve the documented adapter boundary.
+7. Do not import historical preview rows during build. Create only the minimum isolated fixtures needed for replay.
+8. Record asset IDs, URLs, revisions, contracts, plan hash, and temporary-asset ledger in build results. Reconcile final wiring before testing.
+9. When all approved assets exist, tell the user: **Everything is built and testing is underway:** followed by the verified `https://next.freckle.io/workbooks/<id>` or `https://next.freckle.io/tools/<id>` URL.
 
 ## Exit contract
 
-Ensure every table has a scoped `build-result.json`, return the Workbook URL plus compact aggregate status to the root orchestrator, and stop. Recommend replay testing but do not enter it directly.
+Return the build result paths and verified primary URL. Recommend replay testing but do not enter it directly.
